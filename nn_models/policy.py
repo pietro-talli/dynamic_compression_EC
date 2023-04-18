@@ -1,0 +1,25 @@
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+from torch.nn.utils.rnn import pack_sequence, unpack_sequence
+
+class RecDQN(nn.Module):
+    def __init__(self, input_size, hidden_dim, num_actions):
+        super().__init__()
+        
+        self.rnn = nn.GRU(input_size, hidden_dim)
+        self.linear1 = nn.Linear(hidden_dim, hidden_dim)
+        self.linear2 = nn.Linear(hidden_dim, num_actions)
+
+    def forward(self,x):
+        """
+        x is a list or a Tensor, where each item is a tensor of (L,input_size),
+        where L is not fixed, but can be variable
+        """
+        packed_input = pack_sequence(x, enforce_sorted=False)
+        packed_output, _ = self.rnn(packed_input)
+
+        rec_out = unpack_sequence(packed_output)
+        last_rec = torch.cat([t[-1,:].unsqueeze(0) for t in rec_out]) 
+        return self.linear2(F.relu(self.linear1(F.relu(last_rec))))

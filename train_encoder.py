@@ -6,7 +6,7 @@ from torch.utils.tensorboard import SummaryWriter
 from nn_models.encoder import Encoder
 from nn_models.quantizer import VectorQuantizerEMA
 from nn_models.decoder import Decoder
-from utilities_dataset import create_dataset, ToTensor, FramesDataset
+from utils.utilities_dataset import create_dataset, ToTensor, FramesDataset
 from torch.utils.data import DataLoader
 import numpy as np
 import argparse

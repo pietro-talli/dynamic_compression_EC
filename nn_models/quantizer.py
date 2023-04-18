@@ -40,6 +40,7 @@ class VectorQuantizerEMA(nn.Module):
         
         self._decay = decay
         self._epsilon = epsilon
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     def forward(self, inputs, reset = False):
         # convert inputs from BCHW -> BHWC
@@ -81,7 +82,7 @@ class VectorQuantizerEMA(nn.Module):
             self._embedding.weight = nn.Parameter(self._ema_w / self._ema_cluster_size.unsqueeze(1))
             if reset:
                 rand_idx = np.random.randint(0,input_shape[0]*input_shape[1]*input_shape[2], torch.sum(torch.sum(encodings, 0) == 0).item())
-                m = flat_input[rand_idx] + torch.randn(flat_input[rand_idx].shape).to('cuda')/10000
+                m = flat_input[rand_idx] + torch.randn(flat_input[rand_idx].shape).to(self.device)/10000
                 self._embedding.weight.data[torch.sum(encodings, 0) == 0] = m
             
         # Loss

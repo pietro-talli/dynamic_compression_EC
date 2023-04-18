@@ -15,7 +15,7 @@ import torchvision.transforms as T
 from torch.utils.data import Dataset, DataLoader
 
 def create_dataset(num_samples, path):
-    env = gym.make(path, render_mode = 'rgb_array')
+    env = gym.make('CartPole-v1', render_mode = 'rgb_array')
     env.reset()
 
     num_samples = num_samples
@@ -24,7 +24,7 @@ def create_dataset(num_samples, path):
         writer = csv.writer(file)
         for i in range(num_samples):
 
-            env = gym.make(path, render_mode = 'rgb_array')
+            env = gym.make('CartPole-v1', render_mode = 'rgb_array')
             env.reset()
 
             img_path = path+'/images/'
@@ -82,7 +82,6 @@ class FramesDataset(Dataset):
     def __init__(self, csv_file, root_dir, transform=None):
         
         self.frame = pd.read_csv(csv_file)
-        self.frame = self.frame.drop(19083)
         self.root_dir = root_dir
         self.transform = transform
         

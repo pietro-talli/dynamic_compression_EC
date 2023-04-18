@@ -9,13 +9,43 @@ from nn_models.decoder import Decoder
 from utilities_dataset import create_dataset, ToTensor, FramesDataset
 from torch.utils.data import DataLoader
 import numpy as np
+import argparse
 
-num_training_updates = 50
+parser = argparse.ArgumentParser(description='Train the model')
+parser.add_argument('--num_samples', type=int, help='number of samples in the dataset', required=False)
+parser.add_argument('--epochs', type=int, help='The number of epochs to train the AE', required=False)
+parser.add_argument('--embedding_dim', type=int, help='The embedding dimension of the latent features', required=False)
+parser.add_argument('--num_codewords', type=int, help='The number of codewords to use i the quantizer', required=False)
+parser.add_argument('--retrain', type=bool, help='Set to False if the encoder-decoder already exist', required=False)
+
+
+args = parser.parse_args()
+
+num_samples = 50000 #number of tuples to collect
+collect_dataset = False
+if args.num_samples:
+    num_samples = args.num_samples
+    collect_dataset = True
+
+num_training_updates = 100
+embedding_dim = 64
+num_embeddings = 64
+retrain = True
+
+print(args)
+
+if args.epochs:
+    num_training_updates = args.epochs
+if args.embedding_dim:
+    num_embeddings = args.embedding_dim
+if args.num_codewords:
+    num_embeddings = args.num_codewords
+if args.retrain:
+    retrain = args.retrain
+
 num_hiddens = 128
 num_residual_hiddens = 32
 num_residual_layers = 2
-embedding_dim = 8
-num_embeddings = 64
 
 #The input shape of the encoder is BCHW in this case (B,2,160,360)
 #The output shape is (B,embedding_dim,2,4)
@@ -29,50 +59,50 @@ decoder = Decoder(embedding_dim, num_hiddens, num_residual_layers, num_residual_
 
 #Create a dataset
 # Collect a dataset of tuples (o_t, o_{t+1})
-collect_dataset = False
+
 if collect_dataset:
-    num_samples = 50000 #number of tuples to collect
-    create_dataset(num_samples)
-
-# Create a dataset
-dataset = FramesDataset('dataset/description.csv', 'dataset/images', ToTensor())
-dataloader = DataLoader(dataset, batch_size=128,
-                        shuffle=True, num_workers=6)
+    create_dataset(num_samples, 'dataset')
 
 writer = SummaryWriter()
-
-# Create a dataset
-dataset = FramesDataset('dataset/description.csv', 'dataset/images', ToTensor())
-dataloader = DataLoader(dataset, batch_size=128,
-                        shuffle=True, num_workers=6)
-
-writer = SummaryWriter()
-
 #Parameters of the VQ-VAE
 
 # if gpu is to be used
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print('using ' + device)
+print('using ' + device.type)
+
 
 param_to_optimize = [
                 {'params': encoder.parameters()},
                 {'params': quantizer.parameters()},
                 {'params': decoder.parameters()}]
-learning_rate = 1e-3
-optimizer = torch.optim.Adam(param_to_optimize, lr=learning_rate, amsgrad=False)
-batch_size = 128
-_, h,w = dataset[0]['curr'].shape
 
 encoder.train()
 quantizer.train()
 decoder.train()
+
+if not retrain:
+    param_to_optimize = [{'params': quantizer.parameters()}]
+    encoder.load_state_dict(torch.load('models/encoder.pt'))
+    decoder.load_state_dict(torch.load('models/decoder.pt'))
+    encoder.eval()
+    decoder.eval()
+
+learning_rate = 1e-3
+optimizer = torch.optim.Adam(param_to_optimize, lr=learning_rate, amsgrad=False)
+batch_size = 128
+
+# Create a dataset
+dataset = FramesDataset('dataset/description.csv', 'dataset/images', ToTensor())
+dataloader = DataLoader(dataset, batch_size=128,
+                        shuffle=True, num_workers=6)
+
+_, h,w = dataset[0]['curr'].shape
 
 train_res_recon_error = []
 train_res_perplexity = []
 
 reset = True
 time_step = 0 
-
 
 for i in range(num_training_updates):
     for i_batch, sample_batched in enumerate(dataloader):
@@ -99,7 +129,7 @@ for i in range(num_training_updates):
             print('perplexity: %.5f' % np.mean(train_res_perplexity[-100:]))
             print()
             reset = True #Reset the unused codewords every 50 iteroations
-            
+
             writer.add_scalar('Loss/train', np.mean(train_res_recon_error[-100:]), time_step)
             writer.add_scalar('Perplexity/batch', np.mean(train_res_perplexity[-100:]), time_step)
             time_step += 1

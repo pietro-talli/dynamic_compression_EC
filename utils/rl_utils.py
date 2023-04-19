@@ -115,7 +115,7 @@ def rl_training_loop(env: gym.Env,
         memory.add(episode)
         
         if episode_num % target_net_update_steps == 0:
-            dqn_target.load_state_dict(dqn.state_dict()) 
+            #dqn_target.load_state_dict(dqn.state_dict()) 
             for name, param in dqn_target.named_parameters():
                 param.data = beta*param.data + (1-beta)*dqn.state_dict()[name]
         # Print the final score

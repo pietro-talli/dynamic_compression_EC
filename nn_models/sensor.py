@@ -3,6 +3,7 @@ from nn_models.encoder import Encoder
 from nn_models.quantizer import VectorQuantizerEMA
 import torchvision.transforms as T
 import numpy as np
+import torch.nn as nn
 
 def get_screen(env):
     # Returned screen requested by gym is 400x600x3, but is sometimes larger
@@ -36,4 +37,4 @@ class Sensor(nn.Module):
         input_tensor = torch.reshape(torch.cat((prev_screen, curr_screen)), (1,2,h,w))
         encoded = self.encoder(1-input_tensor)
         _,quantized,_,_ = self.quantizer(encoded)
-        return quantized.reshape(1,-1)
+        return quantized.reshape(1,-1), curr_screen

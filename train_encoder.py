@@ -34,7 +34,7 @@ retrain = True
 if args.epochs:
     num_training_updates = args.epochs
 if args.embedding_dim:
-    num_embeddings = args.embedding_dim
+    embedding_dim = args.embedding_dim
 if args.num_codewords:
     num_embeddings = args.num_codewords
 if args.retrain:

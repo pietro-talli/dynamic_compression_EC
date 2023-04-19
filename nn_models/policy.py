@@ -4,6 +4,8 @@ import torch.nn.functional as F
 
 from torch.nn.utils.rnn import pack_sequence, unpack_sequence
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 class RecDQN(nn.Module):
     def __init__(self, input_size, hidden_dim, num_actions):
         super().__init__()
@@ -18,7 +20,7 @@ class RecDQN(nn.Module):
         where L is not fixed, but can be variable
         """
         packed_input = pack_sequence(x, enforce_sorted=False)
-        packed_output, _ = self.rnn(packed_input)
+        packed_output, _ = self.rnn(packed_input.to(device))
 
         rec_out = unpack_sequence(packed_output)
         last_rec = torch.cat([t[-1,:].unsqueeze(0) for t in rec_out]) 

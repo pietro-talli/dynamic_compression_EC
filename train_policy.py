@@ -8,11 +8,9 @@ import sys
 from nn_models.encoder import Encoder
 from nn_models.decoder import Decoder
 from nn_models.quantizer import VectorQuantizerEMA
-from torch.utils.tensorboard import SummaryWriter
 from nn_models.policy import RecDQN
-from utils.buffer import Episode, Memory
 from nn_models.sensor import Sensor
-
+from utils.rl_utils import rl_training_loop
 import argparse
 
 if torch.cuda.is_available():
@@ -26,7 +24,7 @@ num_codewords = 64
 embedding_dim = 64
 batch_size = 256
 num_episodes = 20000
-exploring = 0.5
+exploring = 0.2
 
 parser = argparse.ArgumentParser(description='Train the model')
 parser.add_argument('--num_episodes', type=int, help='number of episode to train the policy', required=False)
@@ -37,7 +35,7 @@ parser.add_argument('--batch_size', type=int, required=False)
 
 args = parser.parse_args()
 
-if args.exporing: exploring = args.exploring
+if args.exploring: exploring = args.exploring
 if args.batch_size: batch_size = args.batch_size
 if args.num_episodes: num_episodes =  args.num_episodes 
 if args.embedding_dim: embedding_dim = args.embedding_dim
@@ -51,9 +49,9 @@ encoder = Encoder(2, num_hiddens, num_residual_layers, num_residual_hiddens, emb
 quantizer = VectorQuantizerEMA(num_codewords, embedding_dim)
 decoder = Decoder(embedding_dim, num_hiddens, num_residual_layers, num_residual_hiddens)
 
-encoder.load_state_dict(torch.load('../models/encoder.pt'))
-quantizer.load_state_dict(torch.load('../models/quantizer_'+str(num_codewords)+'.pt'))
-decoder.load_state_dict(torch.load('../models/decoder.pt'))
+encoder.load_state_dict(torch.load('../models/encoder.pt', map_location=torch.device('cpu')))
+quantizer.load_state_dict(torch.load('../models/quantizer_'+str(num_codewords)+'.pt', map_location=torch.device('cpu')))
+decoder.load_state_dict(torch.load('../models/decoder.pt', map_location=torch.device('cpu')))
 
 encoder.eval()
 quantizer.eval()
@@ -65,8 +63,17 @@ latent_dim = features*embedding_dim
 
 sensor = Sensor(encoder, quantizer)
 
+dqn = RecDQN(latent_dim,latent_dim,env.action_space.n)
+dqn_target = RecDQN(latent_dim,latent_dim,env.action_space.n)
 
+dqn = rl_training_loop(env,
+                       dqn,
+                       dqn_target,
+                       sensor,
+                       num_episodes,
+                       batch_size,
+                       gamma=0.97,
+                       exp_frac=exploring,
+                       target_net_update_steps=10,
+                       beta = 0.5)
 
-
-
-train_policy(env, encoder, vq_layer, num_episodes, latent_dim, batch_size=batch_size)

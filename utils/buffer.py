@@ -26,6 +26,9 @@ class Memory:
         self.memory_size = memory_size
         self.episode_queue = deque(maxlen=self.memory_size)
 
+    def __len__(self,):
+        return len(self.episode_queue)
+
     def add(self, episode):
         self.episode_queue.append(episode)
 

@@ -5,6 +5,10 @@ import random
 import torch.nn as nn
 from torch.utils.tensorboard import SummaryWriter
 from utils.buffer import Episode, Memory
+from itertools import count
+from collections import namedtuple
+from torch.distributions import Categorical
+import torch.nn.functional as F
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -149,3 +153,108 @@ def update_step_rec(dqn,dqn_target, memory: Memory,gamma,optimizer,loss_fn,batch
     optimizer.step()
 
     return loss.item()
+
+
+### CODE FOR ACTOR CRITIC
+
+SavedAction = namedtuple('SavedAction', ['log_prob', 'value'])
+eps = np.finfo(np.float32).eps.item()
+
+def select_action(state, model):
+    probs, state_value = model(state)
+
+    # create a categorical distribution over the list of probabilities of actions
+    m = Categorical(probs)
+
+    # and sample an action using the distribution
+    action = m.sample()
+
+    # save to action buffer
+    model.saved_actions.append(SavedAction(m.log_prob(action), state_value))
+
+    # the action to take (left or right)
+    return action.item()
+
+def finish_episode(model, optimizer, gamma):
+    """
+    Training code. Calculates actor and critic loss and performs backprop.
+    """
+    R = 0
+    saved_actions = model.saved_actions
+    policy_losses = [] # list to save actor (policy) loss
+    value_losses = [] # list to save critic (value) loss
+    returns = [] # list to save the true values
+
+    # calculate the true value using rewards returned from the environment
+    for r in model.rewards[::-1]:
+        # calculate the discounted value
+        R = r + gamma * R
+        returns.insert(0, R)
+
+    returns = torch.tensor(returns)
+    returns = (returns - returns.mean()) / (returns.std() + eps)
+
+    for (log_prob, value), R in zip(saved_actions, returns):
+        advantage = R - value.item()
+
+        # calculate actor (policy) loss
+        policy_losses.append(-log_prob * advantage)
+
+        # calculate critic (value) loss using L1 smooth loss
+        value_losses.append(F.smooth_l1_loss(value, torch.tensor([R])))
+
+    # reset gradients
+    optimizer.zero_grad()
+
+    # sum up all the values of policy_losses and value_losses
+    loss = torch.stack(policy_losses).sum() + torch.stack(value_losses).sum()
+
+    # perform backprop
+    loss.backward()
+    nn.utils.clip_grad_norm_(model.parameters(), 2)
+    optimizer.step()
+
+    # reset rewards and action buffer
+    del model.rewards[:]
+    del model.saved_actions[:]
+    return loss.item()
+
+
+def A2C(env, model, sensor, num_episodes: int, gamma: float = 0.99):
+    optimizer = torch.optim.Adam(model.parameters(), lr=3e-4)
+    
+    writer = SummaryWriter('../runs_policy/a2c')
+
+    for episode in range(num_episodes):
+        _ = env.reset()
+        ep_reward = 0
+        done = False
+
+        prev_screen = None
+        state_received, curr_screen = sensor(env, prev_screen)
+        state_received = state_received.detach()
+        states = []
+
+        while not done:
+            states.append(state_received)
+            input_state = torch.cat(states,0)
+
+            action = select_action(input_state, model)
+            state, reward, done, _, _ = env.step(action)
+            prev_screen = curr_screen
+            state_received, curr_screen = sensor(env, prev_screen)
+
+            x, x_dot, theta, theta_dot = env.state
+            r1 = (env.x_threshold - abs(x)) / env.x_threshold - 0.8
+            r2 = (env.theta_threshold_radians - abs(theta)) / env.theta_threshold_radians - 0.5
+            reward = r1 + r2
+
+            model.rewards.append(reward)
+            ep_reward += reward
+        
+        print(ep_reward)
+        loss = finish_episode(model, optimizer, gamma)
+        writer.add_scalar('Performane/Score', ep_reward, episode)
+        writer.add_scalar('Loss/train', loss, episode)
+        
+    return model

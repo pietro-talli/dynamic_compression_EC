@@ -25,3 +25,30 @@ class RecDQN(nn.Module):
         rec_out = unpack_sequence(packed_output)
         last_rec = torch.cat([t[-1,:].unsqueeze(0) for t in rec_out]) 
         return self.linear2(F.relu(self.linear1(F.relu(last_rec))))
+    
+class RecA2C(nn.Module):
+    def __init__(self, input_size, hidden_dim, num_actions):
+        super().__init__()
+
+        self.rnn = nn.GRU(input_size, hidden_dim)
+        self.linear_value = nn.Linear(hidden_dim,hidden_dim)
+        self.linear_policy = nn.Linear(hidden_dim,hidden_dim)
+
+        self.value = nn.Linear(hidden_dim,1)
+        self.policy = nn.Linear(hidden_dim,num_actions)
+
+        self.saved_actions = []
+        self.rewards = []
+
+    def forward(self,x):
+        """
+        x is a Tensor of (L,input_size),
+        """
+        
+        rnn_out, _ = self.rnn(x.to(device))
+        last_rec = rnn_out[-1,:]
+
+        value = self.value(F.relu(self.linear_value(last_rec)))
+        policy = F.softmax(self.policy(F.relu(self.linear_policy(last_rec))),dim=-1)
+
+        return policy, value

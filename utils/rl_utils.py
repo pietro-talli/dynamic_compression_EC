@@ -115,8 +115,8 @@ def rl_training_loop(env: gym.Env,
         
         if episode_num % target_net_update_steps == 0:
             dqn_target.load_state_dict(dqn.state_dict()) 
-            #for name, param in dqn_target.named_parameters():
-            #    param.data = beta*param.data + (1-beta)*dqn.state_dict()[name]
+            for name, param in dqn_target.named_parameters():
+                param.data = beta*param.data + (1-beta)*dqn.state_dict()[name]
         # Print the final score
         writer.add_scalar('Performance/Score', score, episode_num)
         writer.add_scalar('Strategy/Epsilon', epsilon, episode_num)

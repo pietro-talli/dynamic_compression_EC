@@ -47,3 +47,18 @@ Each run  `encoder`, `quantizer` and `decoder` will be saved in the folder `mode
 * `decoder.pt`
 
 where K = `num_codewords` for the quantizer selceted. 
+
+## Train the policy with fixed quantization
+
+After the AE has been trained it is possible to train the policy of the receiver (using a fixed quantization strategy at the transmitter). Use `train_policy.py` to train the policy. To run the function requires that in the `models` folder there are:
+* `encoder.pt`
+* `quantizer_K.pt` (a quantizer with the desired number of codewords)
+
+example of how to use the function `train_policy.py`:
+```
+python train_policy.py --num_codewords 64
+```
+This command will train a policy using the `quantizer_64.pt` as the quantizer at the sensor side. The policty will be saved in the models folder as `policy_64.pt`
+
+## Train the regressor to obtain semantic performance
+

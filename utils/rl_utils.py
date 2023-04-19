@@ -255,7 +255,7 @@ def A2C(env, model, sensor, num_episodes: int, gamma: float = 0.99):
         
         print(score)
         loss = finish_episode(model, optimizer, gamma)
-        writer.add_scalar('Performane/Score', score, episode)
+        writer.add_scalar('Performance/Score', score, episode)
         writer.add_scalar('Loss/train', loss, episode)
         
     return model

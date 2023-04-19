@@ -234,7 +234,7 @@ def A2C(env, model, sensor, num_episodes: int, gamma: float = 0.99):
         state_received, curr_screen = sensor(env, prev_screen)
         state_received = state_received.detach()
         states = []
-
+        score = 0
         while not done:
             states.append(state_received)
             input_state = torch.cat(states,0)
@@ -251,10 +251,11 @@ def A2C(env, model, sensor, num_episodes: int, gamma: float = 0.99):
 
             model.rewards.append(reward)
             ep_reward += reward
+            score += 1
         
-        print(ep_reward)
+        print(score)
         loss = finish_episode(model, optimizer, gamma)
-        writer.add_scalar('Performane/Score', ep_reward, episode)
+        writer.add_scalar('Performane/Score', score, episode)
         writer.add_scalar('Loss/train', loss, episode)
         
     return model

@@ -75,6 +75,7 @@ dqn = rl_training_loop(env,
                        gamma=0.97,
                        exp_frac=exploring,
                        target_net_update_steps=10,
-                       beta = 0.5)
+                       beta = 0.5,
+                       num_codewords = num_codewords)
 
 torch.save(dqn.state_dict(), '../models/policy_'+str(num_codewords)+'.pt')

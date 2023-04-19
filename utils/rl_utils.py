@@ -136,7 +136,7 @@ def update_step_rec(dqn,dqn_target, memory: Memory,gamma,optimizer,loss_fn,batch
     next_state_max_q_values = q_values_next.max(dim=-1)[0]
 
     rewards = torch.FloatTensor(rewards).to(device)
-    actions = torch.LongTensor(actions)
+    actions = torch.LongTensor(actions).to(device)
 
     expected_state_action_values = torch.tensor(rewards) + (next_state_max_q_values * gamma)
     state_action_values = q_values.gather(1, actions.unsqueeze(1)).squeeze(1)

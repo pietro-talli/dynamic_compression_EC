@@ -53,7 +53,7 @@ def rl_training_loop(env: gym.Env,
                      target_net_update_steps: int,
                      beta: float
                      ):
-    writer = SummaryWriter()
+    writer = SummaryWriter('../runs_policy')
     loss_fn = nn.SmoothL1Loss()
     env.reset(seed = 0)
     np.random.seed(0)

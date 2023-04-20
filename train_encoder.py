@@ -40,6 +40,9 @@ if args.num_codewords:
 if args.retrain:
     retrain = args.retrain
 
+if num_embeddings != 64:
+    retrain = False
+
 num_hiddens = 128
 num_residual_hiddens = 32
 num_residual_layers = 2
@@ -143,10 +146,14 @@ for i in range(num_training_updates):
             writer.add_scalar('Loss/train', np.mean(train_res_recon_error[-100:]), time_step)
             writer.add_scalar('Perplexity/batch', np.mean(train_res_perplexity[-100:]), time_step)
             time_step += 1
-            torch.save(encoder.state_dict(), '../models/encoder_training.pt')
+            
             torch.save(quantizer.state_dict(), '../models/quantizer_'+str(num_embeddings)+'_training.pt')
-            torch.save(decoder.state_dict(), '../models/decoder_training.pt')
+            if retrain:
+                torch.save(encoder.state_dict(), '../models/encoder_training.pt')
+                torch.save(decoder.state_dict(), '../models/decoder_training.pt')
 
-torch.save(encoder.state_dict(), '../models/encoder.pt')
+
 torch.save(quantizer.state_dict(), '../models/quantizer_'+str(num_embeddings)+'.pt')
-torch.save(decoder.state_dict(), '../models/decoder.pt')
+if retrain:
+    torch.save(encoder.state_dict(), '../models/encoder.pt')
+    torch.save(decoder.state_dict(), '../models/decoder.pt')

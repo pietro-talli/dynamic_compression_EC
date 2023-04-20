@@ -6,7 +6,7 @@ import gym
 from nn_models.sensor import get_screen
 import matplotlib.pyplot as plt
 
-num_codewords = 64
+num_codewords = 16
 embedding_dim = 8
 
 num_hiddens = 128
@@ -17,9 +17,9 @@ encoder = Encoder(2, num_hiddens, num_residual_layers, num_residual_hiddens, emb
 quantizer = VectorQuantizerEMA(num_codewords, embedding_dim)
 decoder = Decoder(embedding_dim, num_hiddens, num_residual_layers, num_residual_hiddens)
 
-encoder.load_state_dict(torch.load('../models/encoder_training.pt', map_location=torch.device('cpu')))
-quantizer.load_state_dict(torch.load('../models/quantizer_'+str(num_codewords)+'_training.pt', map_location=torch.device('cpu')))
-decoder.load_state_dict(torch.load('../models/decoder_training.pt', map_location=torch.device('cpu')))
+encoder.load_state_dict(torch.load('../models/encoder.pt', map_location=torch.device('cpu')))
+quantizer.load_state_dict(torch.load('../models/quantizer_'+str(num_codewords)+'.pt', map_location=torch.device('cpu')))
+decoder.load_state_dict(torch.load('../models/decoder.pt', map_location=torch.device('cpu')))
 
 encoder.eval()
 quantizer.eval()

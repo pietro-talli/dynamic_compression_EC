@@ -231,8 +231,9 @@ def A2C(env, model, sensor, num_episodes: int, gamma: float = 0.99):
         done = False
 
         prev_screen = None
-        state_received, curr_screen = sensor(env, prev_screen)
-        state_received = state_received.detach()
+        with torch.no_grad():
+            state_received, curr_screen = sensor(env, prev_screen)
+        state_received = state_received
         states = []
         score = 0
         while not done:
@@ -242,7 +243,8 @@ def A2C(env, model, sensor, num_episodes: int, gamma: float = 0.99):
             action = select_action(input_state, model)
             state, reward, done, _, _ = env.step(action)
             prev_screen = curr_screen
-            state_received, curr_screen = sensor(env, prev_screen)
+            with torch.no_grad():
+                state_received, curr_screen = sensor(env, prev_screen)
 
             x, x_dot, theta, theta_dot = env.state
             r1 = (env.x_threshold - abs(x)) / env.x_threshold - 0.8

@@ -21,7 +21,7 @@ else:
 print('using '+device)
 
 num_codewords = 64
-embedding_dim = 64
+embedding_dim = 8
 num_episodes = 20000
 
 parser = argparse.ArgumentParser(description='Train the model')

@@ -220,10 +220,10 @@ def finish_episode(model, optimizer, gamma):
     return loss.item()
 
 
-def A2C(env, model, sensor, num_episodes: int, gamma: float = 0.99):
+def A2C(env, model, sensor, num_episodes: int, gamma: float = 0.99, num_codewords: int = 64):
     optimizer = torch.optim.Adam(model.parameters(), lr=3e-4)
     
-    writer = SummaryWriter('../runs_policy/a2c')
+    writer = SummaryWriter('../runs_policy/a2c'+str(num_codewords))
 
     for episode in range(num_episodes):
         _ = env.reset()

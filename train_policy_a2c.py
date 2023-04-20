@@ -27,7 +27,7 @@ num_episodes = 20000
 parser = argparse.ArgumentParser(description='Train the model')
 parser.add_argument('--num_episodes', type=int, help='number of episode to train the policy', required=False)
 parser.add_argument('--num_codewords', type=int, help='selct the quantizer to quantize the latent space (default is 64)', required=False)
-parser.add_argument('--embedding_dim', type=int, help='selct the latent space size (default is 64)', required=False)
+parser.add_argument('--embedding_dim', type=int, help='selct the latent space size (default is 8)', required=False)
 
 args = parser.parse_args()
 
@@ -59,6 +59,6 @@ sensor = Sensor(encoder, quantizer)
 
 model = RecA2C(latent_dim, latent_dim, env.action_space.n)
 
-model = A2C(env, model, sensor, num_episodes, gamma=0.99)
-torch.save(model.state_dict(), 'rec_a2c.py')
+model = A2C(env, model, sensor, num_episodes, gamma=0.99, num_codewords=num_codewords)
+torch.save(model.state_dict(), 'policy_a2c_'+str(num_codewords)+'.pt')
 

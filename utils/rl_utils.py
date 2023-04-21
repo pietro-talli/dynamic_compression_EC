@@ -254,6 +254,8 @@ def A2C(env, model, sensor, num_episodes: int, gamma: float = 0.99, num_codeword
             model.rewards.append(reward)
             ep_reward += reward
             score += 1
+            if score >= 500:
+                done = True
         
         print(score)
         loss = finish_episode(model, optimizer, gamma)

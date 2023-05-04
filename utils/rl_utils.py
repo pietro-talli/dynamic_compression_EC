@@ -6,7 +6,7 @@ import torch.nn as nn
 from torch.utils.tensorboard import SummaryWriter
 from utils.buffer import Episode, Memory
 from itertools import count
-from collections import namedtuple
+from collections import namedtuple, deque
 from torch.distributions import Categorical
 import torch.nn.functional as F
 
@@ -234,11 +234,11 @@ def A2C(env, model, sensor, num_episodes: int, gamma: float = 0.99, num_codeword
         with torch.no_grad():
             state_received, curr_screen = sensor(env, prev_screen)
         state_received = state_received
-        states = []
+        states = deque(maxlen = 20)
         score = 0
         while not done:
             states.append(state_received)
-            input_state = torch.cat(states,0)
+            input_state = torch.cat(list(states),0)
 
             action = select_action(input_state, model)
             state, reward, done, _, _ = env.step(action)
@@ -256,8 +256,7 @@ def A2C(env, model, sensor, num_episodes: int, gamma: float = 0.99, num_codeword
             score += 1
             if score >= 500:
                 done = True
-        
-        print(score)
+
         loss = finish_episode(model, optimizer, gamma)
         writer.add_scalar('Performance/Score', score, episode)
         writer.add_scalar('Loss/train', loss, episode)

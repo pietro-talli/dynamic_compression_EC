@@ -18,7 +18,8 @@ SavedAction = namedtuple('SavedAction', ['log_prob', 'value'])
 eps = np.finfo(np.float32).eps.item()
 
 def select_action(state, model):
-    probs, state_value = model(state)
+    with torch.no_grad():
+        probs, state_value = model(state)
 
     # create a categorical distribution over the list of probabilities of actions
     m = Categorical(probs)
@@ -26,18 +27,15 @@ def select_action(state, model):
     # and sample an action using the distribution
     action = m.sample()
 
-    # save to action buffer
-    model.saved_actions.append(SavedAction(m.log_prob(action), state_value))
-
     # the action to take (left or right)
     return action.item()
 
-def A2C(env, model, sensor, regressor, num_episodes: int, num_codewords: int = 64):
+def LevelB(env, model, sensor, regressor, num_episodes: int, num_codewords: int = 64):
 
     optimizer = torch.optim.Adam(regressor.parameters(), lr=3e-4)
     writer = SummaryWriter('../runs_regression/regressor'+str(num_codewords))
 
-    mses = []
+
     for episode in range(num_episodes):
         true_state, _ = env.reset()
         done = False
@@ -48,29 +46,35 @@ def A2C(env, model, sensor, regressor, num_episodes: int, num_codewords: int = 6
         state_received = state_received
         states = deque(maxlen = 20)
         score = 0
-
+        mses = 0
         while not done:
             states.append(state_received)
             input_state = torch.cat(list(states),0)
 
-            estimated_true_state = regressor(input_state)
-            mses.append(F.mse_loss(estimated_true_state, true_state))
+            estimated_true_state = regressor(input_state.detach())
+            mses += F.mse_loss(estimated_true_state, torch.FloatTensor(true_state, device=device))
 
             action = select_action(input_state, model)
+            
             true_state, _, done, _, _ = env.step(action)
             prev_screen = curr_screen
             with torch.no_grad():
                 state_received, curr_screen = sensor(env, prev_screen)
+            score += 1
             if score >= 500:
                 done = True
-
-        batch_mse = torch.cat(mses).sum()
-
+         
+        print(mses.item()/score)
+        print(score)
+        batch_mse = mses/score
         optimizer.zero_grad()
         batch_mse.backward()
         optimizer.step()
 
-        writer.add_scalar('Performance/Score', score, episode)
-        writer.add_scalar('Loss/train', batch_mse.item(), episode)
+        del mses
         
-    return model
+
+        writer.add_scalar('MSE/train', batch_mse.item(), episode)
+        del batch_mse
+
+    return regressor

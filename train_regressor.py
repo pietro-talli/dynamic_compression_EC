@@ -22,7 +22,7 @@ else:
 print('using '+device)
 
 num_codewords = 64
-embedding_dim = 64
+embedding_dim = 8
 batch_size = 256
 num_episodes = 20000
 exploring = 0.2
@@ -62,5 +62,13 @@ state, _ = env.reset()
 features = 8
 latent_dim = features*embedding_dim
 
+from nn_models.policy import RecA2C
+model = RecA2C(latent_dim, latent_dim, env.action_space.n)
+model.load_state_dict(torch.load('../models/policy_a2c_'+str(num_codewords)+'.pt', map_location=torch.device('cpu')))
+
 sensor = Sensor(encoder, quantizer)
 regressor = PhysicalValueRegressor(latent_dim, state.shape[0])
+
+
+from utils.semantic_task import LevelB
+regressor = LevelB(env, model, sensor, regressor,num_episodes,num_codewords)

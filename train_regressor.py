@@ -10,6 +10,7 @@ from nn_models.decoder import Decoder
 from nn_models.quantizer import VectorQuantizerEMA
 from nn_models.policy import RecDQN
 from nn_models.sensor import Sensor
+from nn_models.regressor import PhysicalValueRegressor
 
 import argparse
 
@@ -56,7 +57,10 @@ quantizer.eval()
 decoder.eval()
 
 env = gym.make('CartPole-v1', render_mode = 'rgb_array')
+state, _ = env.reset()
+
 features = 8
 latent_dim = features*embedding_dim
 
 sensor = Sensor(encoder, quantizer)
+regressor = PhysicalValueRegressor(latent_dim, state.shape[0])

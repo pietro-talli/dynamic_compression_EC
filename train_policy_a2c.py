@@ -61,4 +61,3 @@ model = RecA2C(latent_dim, latent_dim, env.action_space.n)
 
 model = A2C(env, model, sensor, num_episodes, gamma=0.99, num_codewords=num_codewords)
 torch.save(model.state_dict(), '../models/policy_a2c_'+str(num_codewords)+'.pt')
-

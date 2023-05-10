@@ -35,7 +35,7 @@ def LevelB(env, model, sensor, regressor, num_episodes: int, num_codewords: int 
     optimizer = torch.optim.Adam(regressor.parameters(), lr=3e-4)
     writer = SummaryWriter('../runs_regression/regressor'+str(num_codewords))
 
-
+    regressor.to(device)
     for episode in range(num_episodes):
         true_state, _ = env.reset()
         done = False

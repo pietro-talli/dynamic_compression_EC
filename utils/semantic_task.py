@@ -36,6 +36,7 @@ def LevelB(env, model, sensor, regressor, num_episodes: int, num_codewords: int 
     writer = SummaryWriter('../runs_regression/regressor'+str(num_codewords))
 
     regressor.to(device)
+    model.to(device)
     for episode in range(num_episodes):
         true_state, _ = env.reset()
         done = False

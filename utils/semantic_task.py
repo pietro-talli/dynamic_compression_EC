@@ -52,7 +52,8 @@ def LevelB(env, model, sensor, regressor, num_episodes: int, num_codewords: int 
             input_state = torch.cat(list(states),0)
 
             estimated_true_state = regressor(input_state.detach())
-            mses += F.mse_loss(estimated_true_state, torch.FloatTensor(true_state, device=device))
+            ts = torch.FloatTensor(true_state)
+            mses += F.mse_loss(estimated_true_state, ts.to(device))
 
             action = select_action(input_state, model)
             

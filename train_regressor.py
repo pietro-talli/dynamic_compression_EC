@@ -72,3 +72,4 @@ regressor = PhysicalValueRegressor(latent_dim, state.shape[0])
 
 from utils.semantic_task import LevelB
 regressor = LevelB(env, model, sensor, regressor,num_episodes,num_codewords)
+torch.save(regressor.state_dict(), '../models/regressor_'+str(num_codewords)+'.pt')

@@ -5,6 +5,12 @@ import torchvision.transforms as T
 import numpy as np
 import torch.nn as nn
 
+
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
+
 def get_screen(env):
     # Returned screen requested by gym is 400x600x3, but is sometimes larger
     # such as 800x1200x3. Transpose it into torch order (CHW).
@@ -50,5 +56,5 @@ class Sensor_not_quantized(nn.Module):
         curr_screen = get_screen(env)
         h,w = curr_screen.squeeze().numpy().shape
         input_tensor = torch.reshape(torch.cat((prev_screen, curr_screen)), (1,2,h,w))
-        encoded = self.encoder(1-input_tensor)
+        encoded = self.encoder(1-input_tensor.to(device))
         return encoded, curr_screen

@@ -33,12 +33,16 @@ parser.add_argument('--num_episodes', type=int, help='number of episode to train
 parser.add_argument('--embedding_dim', type=int, help='selct the latent space size (default is 64)', required=False)
 parser.add_argument('--batch_size', type=int, required=False)
 parser.add_argument('--level', type=str, help='one of the three level of communication either A, B or C', required = True)
+parser.add_argument('--beta', type=float, help='trade-off parameter', required = True)
+
 
 args = parser.parse_args()
 
 if args.batch_size: batch_size = args.batch_size
 if args.num_episodes: num_episodes =  args.num_episodes 
 if args.embedding_dim: embedding_dim = args.embedding_dim
+
+beta = args.beta
 
 level = args.level
 
@@ -69,15 +73,22 @@ latent_dim = features*embedding_dim
 
 quantizers = []
 num_quantization_levels = [0,1,2,3,4,5,6]
-num_codewords = [2,4,6,8,16,32,64]
+num_codewords_s = [2,4,8,16,32,64]
 
 for i in num_quantization_levels[1:]:
-    quantizer = VectorQuantizerEMA(num_codewords[], embedding_dim)
-    quantizers[i-1] = 
-
-list_of_quantizers = nn.ModuleList()
-
+    quantizer = VectorQuantizerEMA(num_codewords_s[i-1], embedding_dim)
+    quantizer.load_state_dict(torch.load('../models/quantizer_'+str(num_codewords_s[i-1])+'.pt', map_location=torch.device('cpu')))
+    quantizers.append(quantizer)
+    
+list_of_quantizers = nn.ModuleList(quantizers)
 
 from nn_models.policy import RecA2C
 model = RecA2C(latent_dim, latent_dim, env.action_space.n)
 model.load_state_dict(torch.load('../models/policy_a2c_'+str(num_codewords)+'.pt', map_location=torch.device('cpu')))
+
+sensor_policy = RecA2C(latent_dim, latent_dim, len(num_quantization_levels))
+
+#Define the level at which to train the system model
+from utils.lvs import sensor_3_levels
+sensor_policy = sensor_3_levels(model, env, sensor_policy, list_of_quantizers, level, num_episodes, beta, encoder, gamma = 0.99)
+torch.save('..models/sensor_level_'+level+'_a2c_'+str(beta)+'.pt')

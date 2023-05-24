@@ -99,7 +99,8 @@ def sensor_3_levels(model, env, sensor_policy, list_of_quantizers, level, num_ep
         score = 0
         q = -1
         while not done:
-            s_and_prev_q = torch.cat([state_not_quantized.reshape(-1), torch.tensor([q])])
+            q_tensor = torch.tensor([q])
+            s_and_prev_q = torch.cat([state_not_quantized.reshape(-1), q_tensor.to(device)])
             states.append(s_and_prev_q.reshape(1,-1))
             input_state = torch.cat(list(states),0)
 

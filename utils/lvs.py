@@ -97,8 +97,10 @@ def sensor_3_levels(model, env, sensor_policy, list_of_quantizers, level, num_ep
         states = deque(maxlen = 20)
         states_quantized = deque(maxlen=20)
         score = 0
+        q = -1
         while not done:
-            states.append(state_not_quantized.reshape(1,-1))
+            s_and_prev_q = torch.cat([state_not_quantized.reshape(-1), torch.tensor([q])])
+            states.append(s_and_prev_q.reshape(1,-1))
             input_state = torch.cat(list(states),0)
 
             q = select_action(input_state.to(device), sensor_policy)

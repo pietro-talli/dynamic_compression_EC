@@ -86,7 +86,7 @@ from nn_models.policy import RecA2C
 model = RecA2C(latent_dim, latent_dim, env.action_space.n)
 model.load_state_dict(torch.load('../models/policy_a2c_'+str(num_codewords)+'.pt', map_location=torch.device('cpu')))
 
-sensor_policy = RecA2C(latent_dim, latent_dim, len(num_quantization_levels))
+sensor_policy = RecA2C(latent_dim+1, latent_dim, len(num_quantization_levels))
 
 #Define the level at which to train the system model
 from utils.lvs import sensor_3_levels

@@ -119,5 +119,5 @@ if level =='B':
 if level =='A':
     from utils.lvs import sensor_1_levels
 
-    sensor_policy = sensor_1_levels(model, env, sensor_policy, list_of_quantizers, level, num_episodes, beta, encoder, decoder, gamma = 0.99)
+    sensor_policy = sensor_1_levels(model, env, sensor_policy, list_of_quantizers, level, num_episodes, beta, encoder, decoder, gamma = 0)
     torch.save(sensor_policy,'../models/sensor_level_'+level+'_a2c_'+str(beta)+'.pt')

@@ -75,7 +75,6 @@ from nn_models.sensor import Sensor_not_quantized, Sensor_not_quantized_level_A
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-
 def sensor_3_levels(model, env, sensor_policy, list_of_quantizers, level, num_episodes, beta, encoder, gamma = 0.99):
     optimizer = torch.optim.Adam(sensor_policy.parameters(), lr=3e-4)
     writer = SummaryWriter('../runs_sensor_level_'+level+'/a2c'+str(beta))
@@ -212,8 +211,7 @@ def sensor_2_levels(model, env, sensor_policy, list_of_quantizers, level, num_ep
 
     return sensor_policy
 
-
-def sensor_1_levels(model, env, sensor_policy, list_of_quantizers, level, num_episodes, beta, encoder, decoder, gamma = 0.99):
+def sensor_1_levels(model, env, sensor_policy, list_of_quantizers, level, num_episodes, beta, encoder, decoder, gamma = 0):
     optimizer = torch.optim.Adam(sensor_policy.parameters(), lr=3e-4)
     writer = SummaryWriter('../runs_sensor_level_'+level+'/a2c'+str(beta))
     sensor = Sensor_not_quantized_level_A(encoder=encoder)

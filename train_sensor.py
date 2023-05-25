@@ -91,4 +91,4 @@ sensor_policy = RecA2C(latent_dim+1, latent_dim, len(num_quantization_levels))
 #Define the level at which to train the system model
 from utils.lvs import sensor_3_levels
 sensor_policy = sensor_3_levels(model, env, sensor_policy, list_of_quantizers, level, num_episodes, beta, encoder, gamma = 0.99)
-torch.save(sensor_policy,'..models/sensor_level_'+level+'_a2c_'+str(beta)+'.pt')
+torch.save(sensor_policy,'../models/sensor_level_'+level+'_a2c_'+str(beta)+'.pt')

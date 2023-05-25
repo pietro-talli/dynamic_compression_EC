@@ -70,7 +70,7 @@ def finish_episode(model, optimizer, gamma):
     del model.saved_actions[:]
     return loss.item()
 
-from nn_models.sensor import Sensor_not_quantized
+from nn_models.sensor import Sensor_not_quantized, Sensor_not_quantized_level_A
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -130,6 +130,141 @@ def sensor_3_levels(model, env, sensor_policy, list_of_quantizers, level, num_ep
             reward = r1 + r2 - (beta*q)
 
             sensor_policy.rewards.append(reward)
+            ep_reward += reward
+            score += 1
+            if score >= 500:
+                done = True
+
+        loss = finish_episode(sensor_policy, optimizer, gamma)
+        writer.add_scalar('Performance/Score', score, episode)
+        writer.add_scalar('Loss/train', loss, episode)
+        
+        if episode%1000 == 0:
+            torch.save(sensor_policy,'../models/sensor_level_'+level+'_a2c_'+str(beta)+'_train.pt')
+
+    return sensor_policy
+
+def sensor_2_levels(model, env, sensor_policy, list_of_quantizers, level, num_episodes, beta, encoder, regressors, gamma = 0.99):
+    optimizer = torch.optim.Adam(sensor_policy.parameters(), lr=3e-4)
+    writer = SummaryWriter('../runs_sensor_level_'+level+'/a2c'+str(beta))
+    sensor = Sensor_not_quantized(encoder=encoder)
+
+    model.to(device)
+    sensor.to(device)
+    sensor_policy.to(device)
+    list_of_quantizers.to(device)
+    regressors.to(device)
+
+    for episode in range(num_episodes):
+        _ = env.reset()
+        ep_reward = 0
+        done = False
+
+        prev_screen = None
+        with torch.no_grad():
+            state_not_quantized, curr_screen = sensor(env, prev_screen)
+        states = deque(maxlen = 20)
+        states_quantized = deque(maxlen=20)
+        score = 0
+        q = -1
+        while not done:
+            q_tensor = torch.tensor([q])
+            s_and_prev_q = torch.cat([state_not_quantized.reshape(-1), q_tensor.to(device)])
+            states.append(s_and_prev_q.reshape(1,-1))
+            input_state = torch.cat(list(states),0)
+
+            q = select_action(input_state.to(device), sensor_policy)
+
+            with torch.no_grad():
+                if q == 0 and score == 0:
+                    q = 1
+                if q > 0:
+                    _,state_quantized,_,_ = list_of_quantizers[q-1](state_not_quantized)
+                if q == 0 and score >0:
+                    state_quantized = state_quantized
+                states_quantized.append(state_quantized.reshape(1,-1))
+                input_state_quantized = torch.cat(list(states_quantized),0)
+                action = select_action(input_state_quantized.to(device), model)
+
+            state = env.state
+            with torch.no_grad():
+                state_tensor = torch.tensor(state)
+                reward = F.mse_loss(regressors[-1](input_state_quantized), state_tensor.to(device)) - (beta*q)
+
+            sensor_policy.rewards.append(reward)
+            
+            state, reward, done, _, _ = env.step(action)
+            prev_screen = curr_screen
+            with torch.no_grad():
+                state_not_quantized, curr_screen = sensor(env, prev_screen)
+            
+            ep_reward += reward
+            score += 1
+            if score >= 500:
+                done = True
+
+        loss = finish_episode(sensor_policy, optimizer, gamma)
+        writer.add_scalar('Performance/Score', score, episode)
+        writer.add_scalar('Loss/train', loss, episode)
+        
+        if episode%1000 == 0:
+            torch.save(sensor_policy,'../models/sensor_level_'+level+'_a2c_'+str(beta)+'_train.pt')
+
+    return sensor_policy
+
+
+def sensor_1_levels(model, env, sensor_policy, list_of_quantizers, level, num_episodes, beta, encoder, decoder, gamma = 0.99):
+    optimizer = torch.optim.Adam(sensor_policy.parameters(), lr=3e-4)
+    writer = SummaryWriter('../runs_sensor_level_'+level+'/a2c'+str(beta))
+    sensor = Sensor_not_quantized_level_A(encoder=encoder)
+
+    model.to(device)
+    sensor.to(device)
+    sensor_policy.to(device)
+    list_of_quantizers.to(device)
+    decoder.to(device)
+
+    for episode in range(num_episodes):
+        _ = env.reset()
+        ep_reward = 0
+        done = False
+
+        prev_screen = None
+        with torch.no_grad():
+            state_not_quantized, curr_screen, frames = sensor(env, prev_screen)
+        states = deque(maxlen = 20)
+        states_quantized = deque(maxlen=20)
+        score = 0
+        q = -1
+        while not done:
+            q_tensor = torch.tensor([q])
+            s_and_prev_q = torch.cat([state_not_quantized.reshape(-1), q_tensor.to(device)])
+            states.append(s_and_prev_q.reshape(1,-1))
+            input_state = torch.cat(list(states),0)
+
+            q = select_action(input_state.to(device), sensor_policy)
+
+            with torch.no_grad():
+                if q == 0 and score == 0:
+                    q = 1
+                if q > 0:
+                    _,state_quantized,_,_ = list_of_quantizers[q-1](state_not_quantized)
+                if q == 0 and score >0:
+                    state_quantized = state_quantized
+                states_quantized.append(state_quantized.reshape(1,-1))
+                input_state_quantized = torch.cat(list(states_quantized),0)
+                action = select_action(input_state_quantized.to(device), model)
+
+            with torch.no_grad():
+                reward = -10*torch.log10(F.mse_loss(decoder(state_quantized), frames.to(device))) - (beta*q)
+
+            sensor_policy.rewards.append(reward)
+
+            state, reward, done, _, _ = env.step(action)
+            prev_screen = curr_screen
+            with torch.no_grad():
+                state_not_quantized, curr_screen, frames = sensor(env, prev_screen)
+
             ep_reward += reward
             score += 1
             if score >= 500:

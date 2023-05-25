@@ -58,3 +58,17 @@ class Sensor_not_quantized(nn.Module):
         input_tensor = torch.reshape(torch.cat((prev_screen, curr_screen)), (1,2,h,w))
         encoded = self.encoder(1-input_tensor.to(device))
         return encoded, curr_screen
+    
+class Sensor_not_quantized_level_A(nn.Module):
+    def __init__(self, encoder: Encoder):
+        super().__init__()
+        self.encoder = encoder
+
+    def forward(self, env, prev_screen=None):
+        if prev_screen is None:
+            prev_screen = get_screen(env)
+        curr_screen = get_screen(env)
+        h,w = curr_screen.squeeze().numpy().shape
+        input_tensor = torch.reshape(torch.cat((prev_screen, curr_screen)), (1,2,h,w))
+        encoded = self.encoder(1-input_tensor.to(device))
+        return encoded, curr_screen, 1-input_tensor

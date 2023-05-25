@@ -82,13 +82,36 @@ for i in num_quantization_levels[1:]:
     
 list_of_quantizers = nn.ModuleList(quantizers)
 
-from nn_models.policy import RecA2C
-model = RecA2C(latent_dim, latent_dim, env.action_space.n)
-model.load_state_dict(torch.load('../models/policy_a2c_'+str(num_codewords)+'.pt', map_location=torch.device('cpu')))
+if level =='C':
 
-sensor_policy = RecA2C(latent_dim+1, latent_dim, len(num_quantization_levels))
+    from nn_models.policy import RecA2C
+    model = RecA2C(latent_dim, latent_dim, env.action_space.n)
+    model.load_state_dict(torch.load('../models/policy_a2c_'+str(num_codewords)+'.pt', map_location=torch.device('cpu')))
 
-#Define the level at which to train the system model
-from utils.lvs import sensor_3_levels
-sensor_policy = sensor_3_levels(model, env, sensor_policy, list_of_quantizers, level, num_episodes, beta, encoder, gamma = 0.99)
-torch.save(sensor_policy,'../models/sensor_level_'+level+'_a2c_'+str(beta)+'.pt')
+    sensor_policy = RecA2C(latent_dim+1, latent_dim, len(num_quantization_levels))
+
+    #Define the level at which to train the system model
+    from utils.lvs import sensor_3_levels
+
+    sensor_policy = sensor_3_levels(model, env, sensor_policy, list_of_quantizers, level, num_episodes, beta, encoder, gamma = 0.99)
+    torch.save(sensor_policy,'../models/sensor_level_'+level+'_a2c_'+str(beta)+'.pt')
+
+
+#Level B
+#Load the regressors
+if level =='B':
+    regressors = []
+    for i in num_quantization_levels[1:]:
+        regressor = PhysicalValueRegressor(latent_dim, 4)
+        regressor.load_state_dict(torch.load('../models/regressor_'+str(num_codewords_s[i-1])+'.pt', map_location=torch.device('cpu')))
+        regressors.append(regressor)
+        
+    list_of_quantizers = nn.ModuleList(regressors)
+
+    from utils.lvs import sensor_2_levels
+
+    sensor_policy = sensor_2_levels(model, env, sensor_policy, list_of_quantizers, level, num_episodes, beta, encoder, regressors, gamma = 0.99)
+    torch.save(sensor_policy,'../models/sensor_level_'+level+'_a2c_'+str(beta)+'.pt')
+
+
+#Level A

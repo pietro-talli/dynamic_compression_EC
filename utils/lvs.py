@@ -188,7 +188,7 @@ def sensor_2_levels(model, env, sensor_policy, list_of_quantizers, level, num_ep
             state = env.state
             with torch.no_grad():
                 state_tensor = torch.tensor(state)
-                reward = F.mse_loss(regressors[-1](input_state_quantized), state_tensor.to(device)) - (beta*q)
+                reward = -F.mse_loss(regressors[-1](input_state_quantized), state_tensor.to(device)) - (beta*q)
 
             sensor_policy.rewards.append(reward)
             

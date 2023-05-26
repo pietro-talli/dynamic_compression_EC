@@ -111,7 +111,7 @@ if level =='B':
 
     from utils.lvs import sensor_2_levels
 
-    sensor_policy = sensor_2_levels(model, env, sensor_policy, list_of_quantizers, level, num_episodes, beta, encoder, list_of_regressors, gamma = 0.99)
+    sensor_policy = sensor_2_levels(model, env, sensor_policy, list_of_quantizers, level, num_episodes, beta, encoder, list_of_regressors, gamma = 0)
     torch.save(sensor_policy,'../models/sensor_level_'+level+'_a2c_'+str(beta)+'.pt')
 
 

@@ -133,8 +133,8 @@ def run_episode(sensor_policy,env,level):
     return cost, ep_reward, score, agent_policy.saved_actions, sensor_policy.saved_actions
 
 
-def run_episode_for_gradient(sensor_policy,env,level):
-    true_states = []
+def run_episode_for_gradient(sensor_policy,env,level, true_states):
+
     env.reset()
     done = False
     cost = 0
@@ -168,8 +168,8 @@ def run_episode_for_gradient(sensor_policy,env,level):
 
         state, reward, done, _, _ = env.step(action)
 
-        state = env.state
-        true_states.append(state)
+        state = np.array(env.state)
+        true_states.append(state.reshape(1,4))
         if level == 'B':
             with torch.no_grad():
                 state_tensor = torch.tensor(state)

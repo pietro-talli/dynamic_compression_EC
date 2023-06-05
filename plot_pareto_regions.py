@@ -5,8 +5,19 @@ import os
 import fnmatch
 from nn_models.policy import RecA2C
 from utils.test_utils import run_episode
+import gym
+import argparse
 
-level = "A"
+
+parser = argparse.ArgumentParser(description='Test the sensors')
+
+parser.add_argument('--num_episodes', type=int, help='number of episode to test the sensor', required=True)
+parser.add_argument('--level', type=str, help='level to test the sensor at', required=True)
+
+args = parser.parse_args()
+
+level = args.level
+num_episode_to_test = args.num_episodes
 
 # Search for trained models
 list_of_models_names = []
@@ -30,18 +41,25 @@ for filename in list_of_models_names:
     sensor_policy.load_state_dict(torch.load(name, map_location=torch.device('cpu')).state_dict())
     list_of_models.append(sensor_policy)
 
-num_episode_to_test = 100
-
 total_cost = 0
 total_performance = 0 
 
+env = gym.make('CartPole-v1', render_mode = 'rgb_array')
 
-
-for i in range(num_episode_to_test):
+for i in range(len(list_of_models)):
     sensor_policy = list_of_models[i]
-    cost, performance = run_episode(sensor_policy)
-    total_cost += cost
-    total_performance += performance
+
+    total_cost = 0
+    total_performance = 0 
+
+    for ep in range(num_episode_to_test):
+        cost, performance, agent_actions, sensor_actions = run_episode(sensor_policy,env,level)
+        total_cost += cost
+        total_performance += performance
+
+    print(list_of_models_names[i])
+    print(total_performance/num_episode_to_test)
+    print(total_cost/total_performance)
 
 
 

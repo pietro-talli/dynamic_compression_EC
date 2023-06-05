@@ -27,7 +27,7 @@ def select_action(state, model):
 
 def select_action_policy(state, model):
     probs, state_value = model(state)
-    action = np.argmax(probs)
+    action = torch.argmax(probs)
     return action.item()
 
 def finish_episode(model, optimizer, gamma):

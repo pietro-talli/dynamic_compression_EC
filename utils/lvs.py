@@ -138,6 +138,8 @@ def sensor_3_levels(model, env, sensor_policy, list_of_quantizers, level, num_ep
         writer.add_scalar('Performance/Score', score, episode)
         writer.add_scalar('Loss/train', loss, episode)
         
+        del model.saved_actions[:]
+
         if episode%1000 == 0:
             torch.save(sensor_policy,'../models/sensor_level_'+level+'_a2c_'+str(beta)+'_train.pt')
 

@@ -38,6 +38,7 @@ list_of_models = torch.nn.ModuleList()
 for filename in list_of_models_names:
     name = "../models/"+filename
     print(name)
+    sensor_policy = RecA2C(latent_dim+1, latent_dim, quantization_levels)
     sensor_policy.load_state_dict(torch.load(name, map_location=torch.device('cpu')).state_dict())
     list_of_models.append(sensor_policy)
 
@@ -51,15 +52,28 @@ for i in range(len(list_of_models)):
 
     total_cost = 0
     total_performance = 0 
-
+    scores = 0
     for ep in range(num_episode_to_test):
-        cost, performance, agent_actions, sensor_actions = run_episode(sensor_policy,env,level)
+        cost, performance, score, agent_actions, sensor_actions = run_episode(sensor_policy,env,level)
         total_cost += cost
         total_performance += performance
+        scores += score
 
     print(list_of_models_names[i])
-    print(total_performance/num_episode_to_test)
-    print(total_cost/total_performance)
+    print(total_performance/scores)
+    print(scores/num_episode_to_test)
+    print(total_cost/scores)
 
+    agent_actions = [agent_actions[-len(sensor_actions)+t][0] for t in range(len(sensor_actions))]
+    sensor_actions = [sensor_actions[t][0] for t in range(len(sensor_actions))] 
 
+    assert len(agent_actions) == len(sensor_actions)
 
+    name = list_of_models_names[i]
+    end = 0
+    while name[19+end] != '_':
+        end+=1
+
+    print('beta: ' +name[19:19+end])
+    np.save('../save_numpy/agent_actions_level_'+level+'_beta_'+name[19:19+end]+'.npy',np.array(agent_actions))
+    np.save('../save_numpy/sensor_actions_level_'+level+'_beta_'+name[19:19+end]+'.npy',np.array(sensor_actions))

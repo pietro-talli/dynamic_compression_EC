@@ -71,7 +71,7 @@ def select_action(state, model):
     action = m.sample()
 
     # save to action buffer
-    model.saved_actions.append(SavedAction(action, state_value))
+    model.saved_actions.append(SavedAction(action.item(), state_value))
 
     # the action to take (left or right)
     return action.item()
@@ -114,8 +114,8 @@ def run_episode(sensor_policy,env,level):
         if level == 'B':
             with torch.no_grad():
                 state_tensor = torch.tensor(state)
-                reward = -F.mse_loss(regressors[-1](input_state_quantized), state_tensor)
-        if level == 'B':
+                reward = F.mse_loss(regressors[-1](input_state_quantized), state_tensor)
+        if level == 'A':
             with torch.no_grad():
                 reward = -10*torch.log10(F.mse_loss(decoder(state_quantized), frames))
         if level == 'C':
@@ -130,4 +130,4 @@ def run_episode(sensor_policy,env,level):
         cost+=q
         if score >= 500:
             done = True
-    return cost, ep_reward, agent_policy.saved_actions, sensor_policy.saved_actions
+    return cost, ep_reward, score, agent_policy.saved_actions, sensor_policy.saved_actions

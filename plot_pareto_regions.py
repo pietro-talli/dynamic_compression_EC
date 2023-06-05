@@ -46,7 +46,7 @@ total_cost = 0
 total_performance = 0 
 
 env = gym.make('CartPole-v1', render_mode = 'rgb_array')
-
+plt.figure()
 for i in range(len(list_of_models)):
     sensor_policy = list_of_models[i]
 
@@ -75,5 +75,19 @@ for i in range(len(list_of_models)):
         end+=1
 
     print('beta: ' +name[19:19+end])
-    np.save('../save_numpy/agent_actions_level_'+level+'_beta_'+name[19:19+end]+'.npy',np.array(agent_actions))
-    np.save('../save_numpy/sensor_actions_level_'+level+'_beta_'+name[19:19+end]+'.npy',np.array(sensor_actions))
+    #np.save('../save_numpy/agent_actions_level_'+level+'_beta_'+name[19:19+end]+'.npy',np.array(agent_actions))
+    #np.save('../save_numpy/sensor_actions_level_'+level+'_beta_'+name[19:19+end]+'.npy',np.array(sensor_actions))
+
+    q_s = [0,1,2,3,4,5,6]
+    bins = []
+    for q in q_s:
+        bins.append(np.sum(np.array(sensor_actions) == q)/len(sensor_actions))
+
+    print(bins)
+    ax = plt.subplot(2,4,i+1)
+    ax.bar(q_s, bins)
+    ax.set_ylim(top=1)
+    ax.set_title('beta: '+name[19:19+end])
+
+plt.savefig('../figures/q_dist_level_'+level+'.png')
+plt.show()

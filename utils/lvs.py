@@ -25,6 +25,11 @@ def select_action(state, model):
     # the action to take (left or right)
     return action.item()
 
+def select_action_policy(state, model):
+    probs, state_value = model(state)
+    action = np.argmax(probs)
+    return action.item()
+
 def finish_episode(model, optimizer, gamma):
     """
     Training code. Calculates actor and critic loss and performs backprop.
@@ -114,7 +119,7 @@ def sensor_3_levels(model, env, sensor_policy, list_of_quantizers, level, num_ep
                     state_quantized = state_quantized
                 states_quantized.append(state_quantized.reshape(1,-1))
                 input_state_quantized = torch.cat(list(states_quantized),0)
-                action = select_action(input_state_quantized.to(device), model)
+                action = select_action_policy(input_state_quantized.to(device), model)
 
 
             state, reward, done, _, _ = env.step(action)
@@ -185,7 +190,7 @@ def sensor_2_levels(model, env, sensor_policy, list_of_quantizers, level, num_ep
                     state_quantized = state_quantized
                 states_quantized.append(state_quantized.reshape(1,-1))
                 input_state_quantized = torch.cat(list(states_quantized),0)
-                action = select_action(input_state_quantized.to(device), model)
+                action = select_action_policy(input_state_quantized.to(device), model)
 
             state = env.state
             with torch.no_grad():
@@ -253,7 +258,7 @@ def sensor_1_levels(model, env, sensor_policy, list_of_quantizers, level, num_ep
                     state_quantized = state_quantized
                 states_quantized.append(state_quantized.reshape(1,-1))
                 input_state_quantized = torch.cat(list(states_quantized),0)
-                action = select_action(input_state_quantized.to(device), model)
+                action = select_action_policy(input_state_quantized.to(device), model)
 
             with torch.no_grad():
                 reward = -10*torch.log10(F.mse_loss(decoder(state_quantized), frames.to(device))) - (beta*q)

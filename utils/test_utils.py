@@ -68,7 +68,7 @@ def select_action(state, model):
     m = Categorical(probs)
 
     # and sample an action using the distribution
-    action = m.sample()
+    action = np.argmax(probs)
 
     # save to action buffer
     model.saved_actions.append(SavedAction(action.item(), state_value))
@@ -131,3 +131,62 @@ def run_episode(sensor_policy,env,level):
         if score >= 500:
             done = True
     return cost, ep_reward, score, agent_policy.saved_actions, sensor_policy.saved_actions
+
+
+def run_episode_for_gradient(sensor_policy,env,level):
+    true_states = []
+    env.reset()
+    done = False
+    cost = 0
+    ep_reward = 0
+
+    prev_screen = None
+    with torch.no_grad():
+        state_not_quantized, curr_screen, frames = sensor(env, prev_screen)
+    states = deque(maxlen = 20)
+    states_quantized = deque(maxlen=20)
+    score = 0
+    q = -1
+    while not done:
+        q_tensor = torch.tensor([q])
+        s_and_prev_q = torch.cat([state_not_quantized.reshape(-1), q_tensor])
+        states.append(s_and_prev_q.reshape(1,-1))
+        input_state = torch.cat(list(states),0)
+
+        q = select_action(input_state, sensor_policy)
+
+        with torch.no_grad():
+            if q == 0 and score == 0:
+                q = 1
+            if q > 0:
+                _,state_quantized,_,_ = list_of_quantizers[q-1](state_not_quantized)
+            if q == 0 and score >0:
+                state_quantized = state_quantized
+            states_quantized.append(state_quantized.reshape(1,-1))
+            input_state_quantized = torch.cat(list(states_quantized),0)
+            action = select_action(input_state_quantized, agent_policy)
+
+        state, reward, done, _, _ = env.step(action)
+
+        state = env.state
+        true_states.append(state)
+        if level == 'B':
+            with torch.no_grad():
+                state_tensor = torch.tensor(state)
+                reward = F.mse_loss(regressors[-1](input_state_quantized), state_tensor)
+        if level == 'A':
+            with torch.no_grad():
+                reward = -10*torch.log10(F.mse_loss(decoder(state_quantized), frames))
+        if level == 'C':
+            reward = 1
+        
+        prev_screen = curr_screen
+        with torch.no_grad():
+            state_not_quantized, curr_screen, frames = sensor(env, prev_screen)
+        
+        ep_reward += reward
+        score += 1
+        cost+=q
+        if score >= 500:
+            done = True
+    return cost, ep_reward, score, agent_policy.saved_actions, sensor_policy.saved_actions, true_states

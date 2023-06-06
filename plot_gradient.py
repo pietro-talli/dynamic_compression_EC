@@ -15,6 +15,8 @@ args = parser.parse_args()
 
 if args.retrain: retrain = args.retrain
 
+from tqdm import tqdm
+
 if retrain:
     latent_dim = 64
     quantization_levels = 7
@@ -26,44 +28,68 @@ if retrain:
     sensor_policy.load_state_dict(torch.load(name, map_location=torch.device('cpu')).state_dict())
 
     true_states = []
-    for i in range(100):
-        cost, ep_reward, score, agent_actions, sensor_actions, true_states = run_episode_for_gradient(sensor_policy,env,'C', true_states)
+    for i in tqdm(range(500)):
+        cost, ep_reward, score, aa, sa, true_states = run_episode_for_gradient(sensor_policy,env,'C', true_states)
 
-    agent_actions = [agent_actions[t][0] for t in range(len(sensor_actions))]
-    sensor_actions = [sensor_actions[t][0] for t in range(len(sensor_actions))] 
+    agent_actions = [aa[t][0] for t in range(len(sa))]
+    agent_values = [aa[t][1] for t in range(len(sa))]
+
+    sensor_actions = [sa[t][0] for t in range(len(sa))] 
+    sensor_values = [sa[t][1] for t in range(len(sa))] 
 
     assert len(agent_actions) == len(sensor_actions)
 
     true_states = np.concatenate(true_states, 0)
 
-    np.save('../save_numpy/true_states.npy', true_states)
-    np.save('../save_numpy/action_agent.npy', np.array(agent_actions))
-    np.save('../save_numpy/action_sensor.npy', np.array(sensor_actions))
+    np.save('../save_numpy/true_states_500.npy', true_states)
+    np.save('../save_numpy/action_agent_500.npy', np.array(agent_actions))
+    np.save('../save_numpy/values_agent_500.npy', np.array(agent_values))
+    np.save('../save_numpy/action_sensor_500.npy', np.array(sensor_actions))
+    np.save('../save_numpy/values_sensor_500.npy', np.array(sensor_values))
 
-true_states = np.load('../save_numpy/true_states.npy')
-agent_actions = np.load('../save_numpy/action_agent.npy')
-sensor_actions = np.load('../save_numpy/action_sensor.npy')
+true_states = np.load('../save_numpy/true_states_500.npy')
+agent_actions = np.load('../save_numpy/action_agent_500.npy')
+sensor_actions = np.load('../save_numpy/action_sensor_500.npy')
+agent_values = np.load('../save_numpy/values_agent_500.npy')
+sensor_values = np.load('../save_numpy/values_sensor_500.npy')
 
 x = true_states[:,0]
 x_dot = true_states[:,1]
 theta = true_states[:,2]
 theta_dot = true_states[:,3]
 
-x_min = -0.15
-x_max = 0.05
+#x_min = -0.15
+#x_max = 0.05
 
-y_min = -0.1195
-y_max = 0.1095
+#y_min = -0.1195
+#y_max = 0.1095
 
-num_steps = 5
+#num_steps = 5
+
+x_min = -1.97
+x_max = 1.97
+
+x = theta_dot
+
+y_min = -0.2
+y_max = 0.2
+
+num_steps = 7
+
 action_matrix = np.zeros((num_steps,num_steps))
 q_matrix = np.zeros((num_steps,num_steps))
+
+a_v_matrix = np.zeros((num_steps, num_steps))
+q_v_matrix = np.zeros((num_steps, num_steps))
+
 counter = np.zeros((num_steps,num_steps))
 
 delta_x = (x_max - x_min)/num_steps
 delta_y = (y_max - y_min)/num_steps
 
 print(delta_x, delta_y)
+
+mean_v = np.mean(sensor_values)
 
 for sample in range(len(sensor_actions)):
     if x[sample] > x_max or x[sample] < x_min: pass
@@ -76,17 +102,50 @@ for sample in range(len(sensor_actions)):
             action_matrix[i,j] += agent_actions[sample]
             q_matrix[i,j] += sensor_actions[sample]
             counter[i,j] += 1
+
+            a_v_matrix[i,j] += agent_values[sample]
+            q_v_matrix[i,j] += (mean_v - sensor_values[sample])**2
+
 print(sample)
+
 plt.figure()
 
 a = action_matrix/(counter +1e-10)
 a = a*np.log(np.e*(counter>0))
-plt.imshow(a, interpolation='gaussian')
+plt.imshow(a, extent=[y_min, y_max, x_max, x_min], aspect="auto", interpolation='gaussian')
+plt.ylabel('Cart velocity')
+plt.xlabel('Angle')
+plt.title('Control Actions')
+
 plt.colorbar()
 
 plt.figure()
-plt.imshow((q_matrix/(counter +1e-10))*np.log(np.e*(counter>0)), interpolation='gaussian')
+qq = (q_matrix/(counter +1e-10))*np.log(np.e*(counter>0))
+plt.imshow(qq, interpolation='gaussian', extent=[y_min, y_max, x_max, x_min], aspect="auto")
+plt.ylabel('Cart velocity')
+plt.xlabel('Angle')
+plt.colorbar()
+plt.title('Average Bits per Feature')
+
+
+
+plt.figure()
+
+entropy = - a*np.log(a+1e-10) - (1-a)*np.log(1-a +1e-10)
+entropy =entropy/entropy.max()
+
+plt.imshow(entropy, extent=[y_min, y_max, x_max, x_min], aspect="auto",  interpolation='gaussian')
+plt.ylabel('Cart velocity')
+plt.xlabel('Angle')
+plt.colorbar()
+plt.title('Policy Entropy')
+
+
+plt.figure()
+plt.imshow(q_v_matrix/counter, interpolation='gaussian', extent=[y_min, y_max, x_max, x_min], aspect="auto")
+plt.ylabel('Cart velocity')
+plt.xlabel('Angle')
+plt.title('Value STD')
 plt.colorbar()
 
 plt.show()
-

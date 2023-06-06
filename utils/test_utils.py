@@ -71,7 +71,7 @@ def select_action(state, model):
     action = np.argmax(probs)
 
     # save to action buffer
-    model.saved_actions.append(SavedAction(action.item(), state_value))
+    model.saved_actions.append(SavedAction(action.item(), state_value.item()))
 
     # the action to take (left or right)
     return action.item()

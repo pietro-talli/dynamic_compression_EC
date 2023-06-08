@@ -89,7 +89,7 @@ def sensor_3_levels(model, env, sensor_policy, list_of_quantizers, level, num_ep
     sensor.to(device)
     sensor_policy.to(device)
     list_of_quantizers.to(device)
-
+    list_of_quantizers.eval()
     for episode in range(num_episodes):
         _ = env.reset()
         ep_reward = 0

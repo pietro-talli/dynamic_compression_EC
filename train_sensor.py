@@ -78,6 +78,7 @@ num_codewords_s = [2,4,8,16,32,64]
 for i in num_quantization_levels[1:]:
     quantizer = VectorQuantizerEMA(num_codewords_s[i-1], embedding_dim)
     quantizer.load_state_dict(torch.load('../models/quantizer_'+str(num_codewords_s[i-1])+'.pt', map_location=torch.device('cpu')))
+    quantizer.eval()
     quantizers.append(quantizer)
     
 list_of_quantizers = nn.ModuleList(quantizers)

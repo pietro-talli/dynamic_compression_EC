@@ -69,6 +69,86 @@ theta_dot = true_states[:,3]
 x_min = -1.97
 x_max = 1.97
 
+x = x_dot
+
+y_min = -0.2
+y_max = 0.2
+
+num_steps = 7
+
+action_matrix = np.zeros((num_steps,num_steps))
+q_matrix = np.zeros((num_steps,num_steps))
+
+a_v_matrix = np.zeros((num_steps, num_steps))
+q_v_matrix = np.zeros((num_steps, num_steps))
+
+counter = np.zeros((num_steps,num_steps))
+
+delta_x = (x_max - x_min)/num_steps
+delta_y = (y_max - y_min)/num_steps
+
+print(delta_x, delta_y)
+
+mean_v = np.mean(sensor_values)
+
+for sample in range(len(sensor_actions)):
+    if x[sample] > x_max or x[sample] < x_min: pass
+    else:
+        if theta[sample] > y_max or theta[sample] < y_min: pass
+        else: 
+            i = int( (x[sample] - x_min) // delta_x) 
+            j = int( (theta[sample] - y_min) // delta_y) 
+
+            action_matrix[i,j] += agent_actions[sample]
+            q_matrix[i,j] += sensor_actions[sample]
+            counter[i,j] += 1
+
+            a_v_matrix[i,j] += agent_values[sample]
+            q_v_matrix[i,j] += (mean_v - sensor_values[sample])**2
+
+print(sample)
+
+plt.figure()
+plt.subplot(2,2,1)
+a = action_matrix/(counter +1e-10)
+a = a*np.log(np.e*(counter>0))
+plt.imshow(a, extent=[y_min, y_max, x_max, x_min], aspect="auto", interpolation='gaussian')
+plt.ylabel('Cart velocity')
+plt.xlabel('Angle')
+plt.title('Control Actions')
+
+plt.colorbar()
+plt.subplot(2,2,2)
+qq = (q_matrix/(counter +1e-10))*np.log(np.e*(counter>0))
+plt.imshow(qq, interpolation='gaussian', extent=[y_min, y_max, x_max, x_min], aspect="auto")
+plt.ylabel('Cart velocity')
+plt.xlabel('Angle')
+plt.colorbar()
+plt.title('Average Bits per Feature')
+
+
+plt.subplot(2,2,3)
+entropy = - a*np.log(a+1e-10) - (1-a)*np.log(1-a +1e-10)
+entropy =entropy/entropy.max()
+
+plt.imshow(entropy, extent=[y_min, y_max, x_max, x_min], aspect="auto",  interpolation='gaussian')
+plt.ylabel('Cart velocity')
+plt.xlabel('Angle')
+plt.colorbar()
+plt.title('Policy Entropy')
+
+plt.subplot(2,2,4)
+plt.imshow(q_v_matrix/counter, interpolation='gaussian', extent=[y_min, y_max, x_max, x_min], aspect="auto")
+plt.ylabel('Cart velocity')
+plt.xlabel('Angle')
+plt.title('Value STD')
+plt.colorbar()
+
+
+
+x_min = -1.67
+x_max = 1.67
+
 x = theta_dot
 
 y_min = -0.2
@@ -109,41 +189,37 @@ for sample in range(len(sensor_actions)):
 print(sample)
 
 plt.figure()
-
+plt.subplot(2,2,1)
 a = action_matrix/(counter +1e-10)
 a = a*np.log(np.e*(counter>0))
 plt.imshow(a, extent=[y_min, y_max, x_max, x_min], aspect="auto", interpolation='gaussian')
-plt.ylabel('Cart velocity')
+plt.ylabel('Pole Angular Velocity')
 plt.xlabel('Angle')
 plt.title('Control Actions')
 
 plt.colorbar()
-
-plt.figure()
+plt.subplot(2,2,2)
 qq = (q_matrix/(counter +1e-10))*np.log(np.e*(counter>0))
 plt.imshow(qq, interpolation='gaussian', extent=[y_min, y_max, x_max, x_min], aspect="auto")
-plt.ylabel('Cart velocity')
+plt.ylabel('Pole Angular Velocity')
 plt.xlabel('Angle')
 plt.colorbar()
 plt.title('Average Bits per Feature')
 
 
-
-plt.figure()
-
+plt.subplot(2,2,3)
 entropy = - a*np.log(a+1e-10) - (1-a)*np.log(1-a +1e-10)
 entropy =entropy/entropy.max()
 
 plt.imshow(entropy, extent=[y_min, y_max, x_max, x_min], aspect="auto",  interpolation='gaussian')
-plt.ylabel('Cart velocity')
+plt.ylabel('Pole Angular Velocity')
 plt.xlabel('Angle')
 plt.colorbar()
 plt.title('Policy Entropy')
 
-
-plt.figure()
+plt.subplot(2,2,4)
 plt.imshow(q_v_matrix/counter, interpolation='gaussian', extent=[y_min, y_max, x_max, x_min], aspect="auto")
-plt.ylabel('Cart velocity')
+plt.ylabel('Pole Angular Velocity')
 plt.xlabel('Angle')
 plt.title('Value STD')
 plt.colorbar()

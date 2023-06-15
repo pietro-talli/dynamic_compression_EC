@@ -12,7 +12,8 @@ import argparse
 parser = argparse.ArgumentParser(description='Test the sensors')
 
 parser.add_argument('--num_episodes', type=int, help='number of episode to test the sensor', required=True)
-parser.add_argument('--level', type=str, help='level to test the sensor at', required=True)
+parser.add_argument('--level', type=str, help='lvl trained', required=True)
+parser.add_argument('--level_test', type=str, help='level to test the sensor at', required=True)
 
 args = parser.parse_args()
 
@@ -45,6 +46,8 @@ for filename in list_of_models_names:
 total_cost = 0
 total_performance = 0 
 
+level_test = args.level_test
+
 env = gym.make('CartPole-v1', render_mode = 'rgb_array')
 plt.figure()
 for i in range(len(list_of_models)):
@@ -53,16 +56,19 @@ for i in range(len(list_of_models)):
     total_cost = 0
     total_performance = 0 
     scores = 0
+    rms = 0
     for ep in range(num_episode_to_test):
-        cost, performance, score, agent_actions, sensor_actions = run_episode(sensor_policy,env,level)
+        cost, performance, score, agent_actions, sensor_actions, angles = run_episode(sensor_policy,env,level_test,fixed = 0)
         total_cost += cost
         total_performance += performance
         scores += score
+        rms += np.sum(np.zeros_like(np.array(angles)) - np.array(angles))**2
 
     print(list_of_models_names[i])
     print(total_performance/scores)
     print(scores/num_episode_to_test)
     print(total_cost/scores)
+    print('rms (position): '+str(rms/scores))
 
     agent_actions = [agent_actions[-len(sensor_actions)+t][0] for t in range(len(sensor_actions))]
     sensor_actions = [sensor_actions[t][0] for t in range(len(sensor_actions))] 

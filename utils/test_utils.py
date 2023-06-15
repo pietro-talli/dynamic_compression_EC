@@ -45,6 +45,7 @@ num_codewords_s = [2,4,8,16,32,64]
 for i in num_quantization_levels[1:]:
     quantizer = VectorQuantizerEMA(num_codewords_s[i-1], embedding_dim)
     quantizer.load_state_dict(torch.load('../models/quantizer_'+str(num_codewords_s[i-1])+'.pt', map_location=torch.device('cpu')))
+    quantizer.eval()
     quantizers.append(quantizer)
     
 list_of_quantizers = nn.ModuleList(quantizers)
@@ -76,11 +77,13 @@ def select_action(state, model):
     # the action to take (left or right)
     return action.item()
 
-def run_episode(sensor_policy,env,level):
+def run_episode(sensor_policy,env,level, fixed):
     env.reset()
     done = False
     cost = 0
     ep_reward = 0
+    
+    angles = []
 
     prev_screen = None
     with torch.no_grad():
@@ -96,7 +99,8 @@ def run_episode(sensor_policy,env,level):
         input_state = torch.cat(list(states),0)
 
         q = select_action(input_state, sensor_policy)
-
+        if fixed >0:
+            q = fixed
         with torch.no_grad():
             if q == 0 and score == 0:
                 q = 1
@@ -109,6 +113,8 @@ def run_episode(sensor_policy,env,level):
             action = select_action(input_state_quantized, agent_policy)
 
         state, reward, done, _, _ = env.step(action)
+
+        angles.append(state[0])
 
         state = env.state
         if level == 'B':
@@ -130,7 +136,7 @@ def run_episode(sensor_policy,env,level):
         cost+=q
         if score >= 500:
             done = True
-    return cost, ep_reward, score, agent_policy.saved_actions, sensor_policy.saved_actions
+    return cost, ep_reward, score, agent_policy.saved_actions, sensor_policy.saved_actions, angles
 
 
 def run_episode_for_gradient(sensor_policy,env,level, true_states):

@@ -109,7 +109,7 @@ for sample in range(len(sensor_actions)):
 print(sample)
 
 plt.figure()
-plt.subplot(2,2,1)
+#plt.subplot(2,2,1)
 a = action_matrix/(counter +1e-10)
 a = a*np.log(np.e*(counter>0))
 plt.imshow(a, extent=[y_min, y_max, x_max, x_min], aspect="auto", interpolation='gaussian')
@@ -118,7 +118,14 @@ plt.xlabel('Angle')
 plt.title('Control Actions')
 
 plt.colorbar()
-plt.subplot(2,2,2)
+
+import tikzplotlib
+tikzplotlib.save("../figures/control_actions_pos_vs_angle.tex")
+
+plt.savefig('../figures/control_actions_pos_vs_angle.pdf')
+
+plt.figure()
+#plt.subplot(2,2,2)
 qq = (q_matrix/(counter +1e-10))*np.log(np.e*(counter>0))
 plt.imshow(qq, interpolation='gaussian', extent=[y_min, y_max, x_max, x_min], aspect="auto")
 plt.ylabel('Cart velocity')
@@ -126,8 +133,12 @@ plt.xlabel('Angle')
 plt.colorbar()
 plt.title('Average Bits per Feature')
 
+plt.savefig('../figures/bits_per_feature_pos_vs_angle.pdf')
 
-plt.subplot(2,2,3)
+tikzplotlib.save('../figures/bits_per_feature_pos_vs_angle.tex')
+
+plt.figure()
+#plt.subplot(2,2,3)
 entropy = - a*np.log(a+1e-10) - (1-a)*np.log(1-a +1e-10)
 entropy =entropy/entropy.max()
 
@@ -137,12 +148,15 @@ plt.xlabel('Angle')
 plt.colorbar()
 plt.title('Policy Entropy')
 
-plt.subplot(2,2,4)
-plt.imshow(q_v_matrix/counter, interpolation='gaussian', extent=[y_min, y_max, x_max, x_min], aspect="auto")
-plt.ylabel('Cart velocity')
-plt.xlabel('Angle')
-plt.title('Value STD')
-plt.colorbar()
+plt.savefig('../figures/policy_entropy_pos_vs_angle.pdf')
+tikzplotlib.save('../figures/policy_entropy_pos_vs_angle.tex')
+
+#plt.subplot(2,2,4)
+#plt.imshow(q_v_matrix/counter, interpolation='gaussian', extent=[y_min, y_max, x_max, x_min], aspect="auto")
+#plt.ylabel('Cart velocity')
+#plt.xlabel('Angle')
+#plt.title('Value STD')
+#plt.colorbar()
 
 
 
@@ -189,7 +203,7 @@ for sample in range(len(sensor_actions)):
 print(sample)
 
 plt.figure()
-plt.subplot(2,2,1)
+#plt.subplot(2,2,1)
 a = action_matrix/(counter +1e-10)
 a = a*np.log(np.e*(counter>0))
 plt.imshow(a, extent=[y_min, y_max, x_max, x_min], aspect="auto", interpolation='gaussian')
@@ -198,7 +212,12 @@ plt.xlabel('Angle')
 plt.title('Control Actions')
 
 plt.colorbar()
-plt.subplot(2,2,2)
+
+plt.savefig('../figures/control_actions_omega_vs_angle.pdf')
+tikzplotlib.save('../figures/control_actions_omega_vs_angle.tex')
+
+plt.figure()
+#plt.subplot(2,2,2)
 qq = (q_matrix/(counter +1e-10))*np.log(np.e*(counter>0))
 plt.imshow(qq, interpolation='gaussian', extent=[y_min, y_max, x_max, x_min], aspect="auto")
 plt.ylabel('Pole Angular Velocity')
@@ -207,7 +226,14 @@ plt.colorbar()
 plt.title('Average Bits per Feature')
 
 
-plt.subplot(2,2,3)
+tikzplotlib.save('../figures/bits_per_feature_omega_vs_angle.tex')
+
+plt.margins(0,0)
+
+plt.savefig('../figures/bits_per_feature_omega_vs_angle.png')
+
+plt.figure()
+#plt.subplot(2,2,3)
 entropy = - a*np.log(a+1e-10) - (1-a)*np.log(1-a +1e-10)
 entropy =entropy/entropy.max()
 
@@ -217,11 +243,15 @@ plt.xlabel('Angle')
 plt.colorbar()
 plt.title('Policy Entropy')
 
-plt.subplot(2,2,4)
-plt.imshow(q_v_matrix/counter, interpolation='gaussian', extent=[y_min, y_max, x_max, x_min], aspect="auto")
-plt.ylabel('Pole Angular Velocity')
-plt.xlabel('Angle')
-plt.title('Value STD')
-plt.colorbar()
+plt.savefig('../figures/policy_entropy_omega_vs_angle.pdf')
+tikzplotlib.save('../figures/policy_entropy_omega_vs_angle.tex')
+
+
+#plt.subplot(2,2,4)
+#plt.imshow(q_v_matrix/counter, interpolation='gaussian', extent=[y_min, y_max, x_max, x_min], aspect="auto")
+#plt.ylabel('Pole Angular Velocity')
+#plt.xlabel('Angle')
+#plt.title('Value STD')
+#plt.colorbar()
 
 plt.show()

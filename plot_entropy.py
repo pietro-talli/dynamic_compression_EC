@@ -10,6 +10,7 @@ retrain = False
 
 parser = argparse.ArgumentParser(description='Test for policy gradient')
 parser.add_argument('--retrain', type=bool, help='collect agin the data', required=False)
+parser.add_argument('--t_lag', type=int, help='time lag', required=False)
 
 args = parser.parse_args()
 
@@ -50,6 +51,8 @@ if retrain:
 beta = ''
 
 t_lag = 9
+
+if args.t_lag: t_lag = args.t_lag
 
 true_states = np.load('../save_numpy/true_states_500'+beta+'.npy')
 agent_actions = np.load('../save_numpy/action_agent_500'+beta+'.npy')

@@ -62,3 +62,53 @@ This command will train a policy using the `quantizer_64.pt` as the quantizer at
 
 ## Train the regressor to obtain semantic performance
 
+To train a regressor at the receiver to recontruct the physical state of the system, the script `train_regerssor.py` can be used as follows
+
+```
+python train_regeressor.py --num_codewords 64
+```
+This will train and save an object of type `PhysicalValueRegressor` which implements Pytorch RNN. 
+
+## Obtaining 3 Levels of communication
+
+At this point, we can learn a policy at the Sensor side in order to select the most suitable quantizer to ecode the current observation. Note that the transmitter policy can be trained in order to maximize three different performance metrics at the receiver which correspond respectively to:
+* Technical problem (Level A)
+* Semantic problem (Level B)
+* Effectiveness problem (Level C)
+
+use the `train_sensor.py` script to train a policy at the sensor side. Here is an example of how to use it:
+```
+python train_sensor.py \
+--num_episodes 100000 \
+--level C \
+--beta 0.1
+```
+In this case, the sensor policy will be trained (for 100000 episodes) to maximize the performance at Level C using a trade-off parameter $\beta = 0.1$.
+
+The models will be saved in the `models` folder as `sensor_policy_levelC_beta0.1.pt`. 
+
+## Test the communication system
+
+The performance plots can be obtained by testing each level with each $\beta$ value. It is suggested to test the system averaging at least over 500 episodes to reduce variance due to random initializations.
+
+To obtain the colormaps which describe choices of the transmitter policy with respect to the control actions at the reciever, use the script `plot_gradients.py` as follows:
+```
+python plot_gradient.py \
+--retrain True
+```
+changing the name of the model that is loaded in the script with the one to be used for testing.
+
+To obtain the plot of the sensor action distribution with respect to the entropy of the poloicy at the receiver use the script `plot_entropy.py` as follows:
+```
+python plot_entropy.py --t_lag 3
+```
+this command will produce the colormap corresponding to the `t_lag` time specified (in this case 3). 
+
+## Further details
+All the scripts are based on the python `gym` library and the `pytorch` library for the neural networks. In principle it is possible to use any environment that is compatible with the `gym` library. All the training scripts should work straight away. However, the plots scripts might require some changes in order to work with different environments. 
+
+All the models are defined in the `nn_models` folder and can be easily modified. 
+
+In `utils/rl_utils.py` it is possible to implement other RL algorithms (e.g. PPO, DDPG, etc.) to train the policies. Two algorithms are already implemented:
+* Deep Q-Learning
+* Advantage Actor Critic (A2C)

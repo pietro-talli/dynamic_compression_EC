@@ -29,7 +29,7 @@ if retrain:
     sensor_policy.load_state_dict(torch.load(name, map_location=torch.device('cpu')).state_dict())
 
     true_states = []
-    for i in tqdm(range(2000)):
+    for i in tqdm(range(10000)):
         cost, ep_reward, score, aa, sa, true_states = run_episode_for_gradient(sensor_policy,env,'C', true_states)
 
     agent_actions = [aa[t][0] for t in range(len(sa))]

@@ -22,7 +22,7 @@ if retrain:
     quantization_levels = 7
     sensor_policy = RecA2C(latent_dim+1, latent_dim, quantization_levels)
 
-    name = '../models/sensor_level_C_a2c_0.15_train.pt'
+    name = '../models/sensor_level_A_a2c_1.0_train.pt'
     env = gym.make('CartPole-v1',render_mode='rgb_array')
 
     sensor_policy.load_state_dict(torch.load(name, map_location=torch.device('cpu')).state_dict())
@@ -41,17 +41,17 @@ if retrain:
 
     true_states = np.concatenate(true_states, 0)
 
-    np.save('../save_numpy/true_states_500.npy', true_states)
-    np.save('../save_numpy/action_agent_500.npy', np.array(agent_actions))
-    np.save('../save_numpy/values_agent_500.npy', np.array(agent_values))
-    np.save('../save_numpy/action_sensor_500.npy', np.array(sensor_actions))
-    np.save('../save_numpy/values_sensor_500.npy', np.array(sensor_values))
+    np.save('../save_numpy/true_states_500_level_A.npy', true_states)
+    np.save('../save_numpy/action_agent_500_level_A.npy', np.array(agent_actions))
+    np.save('../save_numpy/values_agent_500_level_A.npy', np.array(agent_values))
+    np.save('../save_numpy/action_sensor_500_level_A.npy', np.array(sensor_actions))
+    np.save('../save_numpy/values_sensor_500_level_A.npy', np.array(sensor_values))
 
-true_states = np.load('../save_numpy/true_states_500.npy')
-agent_actions = np.load('../save_numpy/action_agent_500.npy')
-sensor_actions = np.load('../save_numpy/action_sensor_500.npy')
-agent_values = np.load('../save_numpy/values_agent_500.npy')
-sensor_values = np.load('../save_numpy/values_sensor_500.npy')
+true_states = np.load('../save_numpy/true_states_500_level_A.npy')
+agent_actions = np.load('../save_numpy/action_agent_500_level_A.npy')
+sensor_actions = np.load('../save_numpy/action_sensor_500_level_A.npy')
+agent_values = np.load('../save_numpy/values_agent_500_level_A.npy')
+sensor_values = np.load('../save_numpy/values_sensor_500_level_A.npy')
 
 x = true_states[:,0]
 x_dot = true_states[:,1]
@@ -96,7 +96,7 @@ for sample in range(len(sensor_actions)):
     else:
         if theta[sample] > y_max or theta[sample] < y_min: pass
         else: 
-            i = int( (x[sample] - x_min) // delta_x) 
+            i = int( (x_max - x[sample]) // delta_x) 
             j = int( (theta[sample] - y_min) // delta_y) 
 
             action_matrix[i,j] += agent_actions[sample]
@@ -112,7 +112,7 @@ plt.figure()
 #plt.subplot(2,2,1)
 a = action_matrix/(counter +1e-10)
 a = a*np.log(np.e*(counter>0))
-plt.imshow(a, extent=[y_min, y_max, x_max, x_min], aspect="auto", interpolation='gaussian')
+plt.imshow(a, extent=[y_min, y_max, x_min, x_max], aspect="auto", interpolation='gaussian')
 plt.ylabel('Cart velocity')
 plt.xlabel('Angle')
 plt.title('Control Actions')
@@ -120,36 +120,36 @@ plt.title('Control Actions')
 plt.colorbar()
 
 import tikzplotlib
-tikzplotlib.save("../figures/control_actions_pos_vs_angle.tex")
+tikzplotlib.save("../figures/control_actions_pos_vs_angle_A.tex")
 
-plt.savefig('../figures/control_actions_pos_vs_angle.pdf')
+#plt.savefig('../figures/control_actions_pos_vs_angle.pdf')
 
 plt.figure()
 #plt.subplot(2,2,2)
 qq = (q_matrix/(counter +1e-10))*np.log(np.e*(counter>0))
-plt.imshow(qq, interpolation='gaussian', extent=[y_min, y_max, x_max, x_min], aspect="auto")
+plt.imshow(qq, interpolation='gaussian', extent=[y_min, y_max, x_min, x_max], aspect="auto")
 plt.ylabel('Cart velocity')
 plt.xlabel('Angle')
 plt.colorbar()
 plt.title('Average Bits per Feature')
 
-plt.savefig('../figures/bits_per_feature_pos_vs_angle.pdf')
+#plt.savefig('../figures/bits_per_feature_pos_vs_angle.pdf')
 
-tikzplotlib.save('../figures/bits_per_feature_pos_vs_angle.tex')
+tikzplotlib.save('../figures/bits_per_feature_pos_vs_angle_A.tex')
 
 plt.figure()
 #plt.subplot(2,2,3)
 entropy = - a*np.log(a+1e-10) - (1-a)*np.log(1-a +1e-10)
 entropy =entropy/entropy.max()
 
-plt.imshow(entropy, extent=[y_min, y_max, x_max, x_min], aspect="auto",  interpolation='gaussian')
+plt.imshow(entropy, extent=[y_min, y_max, x_min, x_max], aspect="auto",  interpolation='gaussian')
 plt.ylabel('Cart velocity')
 plt.xlabel('Angle')
 plt.colorbar()
 plt.title('Policy Entropy')
 
-plt.savefig('../figures/policy_entropy_pos_vs_angle.pdf')
-tikzplotlib.save('../figures/policy_entropy_pos_vs_angle.tex')
+#plt.savefig('../figures/policy_entropy_pos_vs_angle.pdf')
+tikzplotlib.save('../figures/policy_entropy_pos_vs_angle_A.tex')
 
 #plt.subplot(2,2,4)
 #plt.imshow(q_v_matrix/counter, interpolation='gaussian', extent=[y_min, y_max, x_max, x_min], aspect="auto")
@@ -190,7 +190,7 @@ for sample in range(len(sensor_actions)):
     else:
         if theta[sample] > y_max or theta[sample] < y_min: pass
         else: 
-            i = int( (x[sample] - x_min) // delta_x) 
+            i = int( (x_max - x[sample]) // delta_x) 
             j = int( (theta[sample] - y_min) // delta_y) 
 
             action_matrix[i,j] += agent_actions[sample]
@@ -202,49 +202,54 @@ for sample in range(len(sensor_actions)):
 
 print(sample)
 
+
+print(action_matrix)
+
+
+
 plt.figure()
 #plt.subplot(2,2,1)
 a = action_matrix/(counter +1e-10)
 a = a*np.log(np.e*(counter>0))
-plt.imshow(a, extent=[y_min, y_max, x_max, x_min], aspect="auto", interpolation='gaussian')
+plt.imshow(a, extent=[y_min, y_max, x_min, x_max], aspect="auto", interpolation='gaussian')
 plt.ylabel('Pole Angular Velocity')
 plt.xlabel('Angle')
 plt.title('Control Actions')
 
 plt.colorbar()
 
-plt.savefig('../figures/control_actions_omega_vs_angle.pdf')
-tikzplotlib.save('../figures/control_actions_omega_vs_angle.tex')
+#plt.savefig('../figures/control_actions_omega_vs_angle.pdf')
+tikzplotlib.save('../figures/control_actions_omega_vs_angle_A.tex')
 
 plt.figure()
 #plt.subplot(2,2,2)
 qq = (q_matrix/(counter +1e-10))*np.log(np.e*(counter>0))
-plt.imshow(qq, interpolation='gaussian', extent=[y_min, y_max, x_max, x_min], aspect="auto")
+plt.imshow(qq, interpolation='gaussian', extent=[y_min, y_max, x_min, x_max], aspect="auto")
 plt.ylabel('Pole Angular Velocity')
 plt.xlabel('Angle')
 plt.colorbar()
 plt.title('Average Bits per Feature')
 
 
-tikzplotlib.save('../figures/bits_per_feature_omega_vs_angle.tex')
+tikzplotlib.save('../figures/bits_per_feature_omega_vs_angle_A.tex')
 
 plt.margins(0,0)
 
-plt.savefig('../figures/bits_per_feature_omega_vs_angle.png')
+#plt.savefig('../figures/bits_per_feature_omega_vs_angle.png')
 
 plt.figure()
 #plt.subplot(2,2,3)
 entropy = - a*np.log(a+1e-10) - (1-a)*np.log(1-a +1e-10)
 entropy =entropy/entropy.max()
 
-plt.imshow(entropy, extent=[y_min, y_max, x_max, x_min], aspect="auto",  interpolation='gaussian')
+plt.imshow(entropy, extent=[y_min, y_max, x_min, x_max], aspect="auto",  interpolation='gaussian')
 plt.ylabel('Pole Angular Velocity')
 plt.xlabel('Angle')
 plt.colorbar()
 plt.title('Policy Entropy')
 
-plt.savefig('../figures/policy_entropy_omega_vs_angle.pdf')
-tikzplotlib.save('../figures/policy_entropy_omega_vs_angle.tex')
+#plt.savefig('../figures/policy_entropy_omega_vs_angle.pdf')
+tikzplotlib.save('../figures/policy_entropy_omega_vs_angle_A.tex')
 
 
 #plt.subplot(2,2,4)

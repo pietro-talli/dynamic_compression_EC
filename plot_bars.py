@@ -97,8 +97,16 @@ perf_CC_rms_position = [0.048442670276776525, 2.911149892556571, 3.2231917166252
 ### FIGURE 8, histograms level C
 
 ### PLOTS
+def tikzplotlib_fix_ncols(obj):
+    """
+    workaround for matplotlib 3.6 renamed legend's _ncol to _ncols, which breaks tikzplotlib
+    """
+    if hasattr(obj, "_ncols"):
+        obj._ncol = obj._ncols
+    for child in obj.get_children():
+        tikzplotlib_fix_ncols(child)
 
-plt.style.use("ggplot")
+
 fig1 = plt.figure()
 
 plt.step(rate_fixed, perf_A_fixed, where = 'post')
@@ -111,7 +119,11 @@ plt.xlabel('Bits per feature')
 plt.title('Results in the image reconstruction task')
 plt.legend(['fixed','level A','level B', 'level C'])
 
+tikzplotlib_fix_ncols(fig1)
 plt.savefig('../figures/Image_Reconstuction.png')
+
+import tikzplotlib
+tikzplotlib.save("../figures/Image_Reconstuction.tex")
 
 fig2 = plt.figure()
 
@@ -126,6 +138,9 @@ plt.title('Results in the state estimation task')
 plt.legend(['fixed','level A','level B', 'level C'])
 plt.savefig('../figures/State_Estimation.png')
 
+tikzplotlib_fix_ncols(fig2)
+tikzplotlib.save("../figures/State_Estimation.tex")
+
 fig3 = plt.figure()
 
 plt.step(rate_fixed, perf_C_fixed, where = 'post')
@@ -138,6 +153,9 @@ plt.xlabel('Bits per feature')
 plt.title('Results in the control task')
 plt.legend(['fixed','level A','level B', 'level C'])
 plt.savefig('../figures/Episode_Length.png')
+
+tikzplotlib_fix_ncols(fig3)
+tikzplotlib.save("../figures/Episode_Length.tex")
 
 fig4 = plt.figure()
 
@@ -152,6 +170,9 @@ plt.title('Results in the control task (RMS angle)')
 plt.legend(['fixed','level A','level B', 'level C'])
 plt.savefig('../figures/RMS_angle.png')
 
+tikzplotlib_fix_ncols(fig4)
+tikzplotlib.save("../figures/RMS_angle.tex")
+
 fig5 = plt.figure()
 
 plt.step(rate_fixed, perf_C_fixed_rms_position, where = 'post')
@@ -164,5 +185,8 @@ plt.xlabel('Bits per feature')
 plt.title('Results in the control task (RMS position)')
 plt.legend(['fixed','level A','level B', 'level C'])
 plt.savefig('../figures/RMS_position.png')
+
+tikzplotlib_fix_ncols(fig5)
+tikzplotlib.save("../figures/RMS_position.tex")
 
 plt.show()

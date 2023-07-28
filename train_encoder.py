@@ -69,11 +69,12 @@ if collect_dataset:
     print('Dataset collected')
 
 writer = SummaryWriter('../runs')
-#Parameters of the VQ-VAE
+
 
 # if gpu is to be used
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+#Parameters of the VQ-VAE
 param_to_optimize = [
                 {'params': encoder.parameters()},
                 {'params': quantizer.parameters()},
@@ -94,7 +95,7 @@ if not retrain:
 if not os.path.exists('../models'):
     os.mkdir('../models')
 
-
+#define the optimizer, learning rate and batch size
 learning_rate = 1e-3
 optimizer = torch.optim.Adam(param_to_optimize, lr=learning_rate, amsgrad=False)
 batch_size = 128
@@ -104,6 +105,7 @@ dataset = FramesDataset('../dataset/description.csv', '../dataset/images', ToTen
 dataloader = DataLoader(dataset, batch_size=128,
                         shuffle=True, num_workers=6)
 
+# shape of the observation 
 _, h,w = dataset[0]['curr'].shape
 
 train_res_recon_error = []
@@ -117,14 +119,18 @@ encoder.to(device)
 quantizer.to(device)
 decoder.to(device)
 
+# Train the model
+
 for i in range(num_training_updates):
     for i_batch, sample_batched in enumerate(dataloader):
         
+        #The input tensor is of shape (B,2,160,360)
         input_tensor = torch.cat((sample_batched['curr'], sample_batched['next']), dim = 1)
         input_tensor = input_tensor.to(device)
         data = 1-input_tensor
         optimizer.zero_grad()
 
+        #The output of the encoder is of shape (B,embedding_dim,2,4)
         z_e = encoder(data)
         vq_loss, quantized, perplexity, _ = quantizer(z_e, reset)
         data_recon = decoder(quantized) 
@@ -136,12 +142,13 @@ for i in range(num_training_updates):
         train_res_perplexity.append(perplexity.item())
         reset = False
         
+        #Print the loss every 100 iterations
         if (i_batch+1) % 100 == 0:
             print('%d iterations' % (i+1))
             print('recon_error: %.5f' % np.mean(train_res_recon_error[-100:]))
             print('perplexity: %.5f' % np.mean(train_res_perplexity[-100:]))
             print()
-            reset = True #Reset the unused codewords every 50 iteroations
+            reset = True #Reset the unused codewords every 100 iteroations
 
             writer.add_scalar('Loss/train', np.mean(train_res_recon_error[-100:]), time_step)
             writer.add_scalar('Perplexity/batch', np.mean(train_res_perplexity[-100:]), time_step)

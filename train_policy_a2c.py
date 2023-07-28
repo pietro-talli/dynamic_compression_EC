@@ -35,14 +35,17 @@ if args.num_episodes: num_episodes =  args.num_episodes
 if args.embedding_dim: embedding_dim = args.embedding_dim
 if args.num_codewords: num_codewords = args.num_codewords 
 
+#Parameters for the encoder
 num_hiddens = 128
 num_residual_hiddens = 32
 num_residual_layers = 2
 
+#Model definition
 encoder = Encoder(2, num_hiddens, num_residual_layers, num_residual_hiddens, embedding_dim)
 quantizer = VectorQuantizerEMA(num_codewords, embedding_dim)
 decoder = Decoder(embedding_dim, num_hiddens, num_residual_layers, num_residual_hiddens)
 
+#Load the model
 encoder.load_state_dict(torch.load('../models/encoder.pt', map_location=torch.device('cpu')))
 quantizer.load_state_dict(torch.load('../models/quantizer_'+str(num_codewords)+'.pt', map_location=torch.device('cpu')))
 decoder.load_state_dict(torch.load('../models/decoder.pt', map_location=torch.device('cpu')))
@@ -51,13 +54,17 @@ encoder.eval()
 quantizer.eval()
 decoder.eval()
 
+#Create the environment
 env = gym.make('CartPole-v1', render_mode = 'rgb_array')
 features = 8
 latent_dim = features*embedding_dim
 
+#Create the sensor
 sensor = Sensor(encoder, quantizer)
 
+#Create the policy
 model = RecA2C(latent_dim, latent_dim, env.action_space.n)
 
+#Train the policy
 model = A2C(env, model, sensor, num_episodes, gamma=0.99, num_codewords=num_codewords)
 torch.save(model.state_dict(), '../models/policy_a2c_'+str(num_codewords)+'.pt')

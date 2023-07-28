@@ -221,6 +221,15 @@ def finish_episode(model, optimizer, gamma):
 
 
 def A2C(env, model, sensor, num_episodes: int, gamma: float = 0.99, num_codewords: int = 64):
+    '''
+    Train the policy using the A2C algorithm
+    env: the environment
+    model: the policy
+    sensor: the the quantizer
+    num_episodes: number of episodes to train the policy
+    gamma: discount factor
+    num_codewords: number of codewords used by the fixed quantizer
+    '''
     optimizer = torch.optim.Adam(model.parameters(), lr=3e-4)
     
     writer = SummaryWriter('../runs_policy/a2c'+str(num_codewords))

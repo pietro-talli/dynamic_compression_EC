@@ -40,14 +40,17 @@ if args.num_episodes: num_episodes =  args.num_episodes
 if args.embedding_dim: embedding_dim = args.embedding_dim
 if args.num_codewords: num_codewords = args.num_codewords 
 
+#Parameters for the encoder
 num_hiddens = 128
 num_residual_hiddens = 32
 num_residual_layers = 2
 
+#Model definition
 encoder = Encoder(2, num_hiddens, num_residual_layers, num_residual_hiddens, embedding_dim)
 quantizer = VectorQuantizerEMA(num_codewords, embedding_dim)
 decoder = Decoder(embedding_dim, num_hiddens, num_residual_layers, num_residual_hiddens)
 
+#Load the model
 encoder.load_state_dict(torch.load('../models/encoder.pt', map_location=torch.device('cpu')))
 quantizer.load_state_dict(torch.load('../models/quantizer_'+str(num_codewords)+'.pt', map_location=torch.device('cpu')))
 decoder.load_state_dict(torch.load('../models/decoder.pt', map_location=torch.device('cpu')))
@@ -56,20 +59,25 @@ encoder.eval()
 quantizer.eval()
 decoder.eval()
 
+#Create the environment
 env = gym.make('CartPole-v1', render_mode = 'rgb_array')
 state, _ = env.reset()
 
 features = 8
 latent_dim = features*embedding_dim
 
+#Load the policy
 from nn_models.policy import RecA2C
 model = RecA2C(latent_dim, latent_dim, env.action_space.n)
 model.load_state_dict(torch.load('../models/policy_a2c_'+str(num_codewords)+'.pt', map_location=torch.device('cpu')))
 
+#Load the sensor
 sensor = Sensor(encoder, quantizer)
+
+#Define the regressor
 regressor = PhysicalValueRegressor(latent_dim, state.shape[0])
 
-
+#Train the regressor
 from utils.semantic_task import LevelB
 regressor = LevelB(env, model, sensor, regressor,num_episodes,num_codewords)
 torch.save(regressor.state_dict(), '../models/regressor_'+str(num_codewords)+'.pt')

@@ -161,6 +161,10 @@ SavedAction = namedtuple('SavedAction', ['log_prob', 'value'])
 eps = np.finfo(np.float32).eps.item()
 
 def select_action(state, model):
+    """
+    This function selects an action (0 or 1) by running state s through the policy
+    network and smapling from the resulting Bernoulli distribution.
+    """
     probs, state_value = model(state)
 
     # create a categorical distribution over the list of probabilities of actions
@@ -178,6 +182,12 @@ def select_action(state, model):
 def finish_episode(model, optimizer, gamma):
     """
     Training code. Calculates actor and critic loss and performs backprop.
+    
+    Args:
+        model: the actor critic model
+        optimizer: the optimizer used to update the model
+        gamma: the discount factor
+
     """
     R = 0
     saved_actions = model.saved_actions
@@ -220,16 +230,21 @@ def finish_episode(model, optimizer, gamma):
     return loss.item()
 
 
-def A2C(env, model, sensor, num_episodes: int, gamma: float = 0.99, num_codewords: int = 64):
-    '''
-    Train the policy using the A2C algorithm
-    env: the environment
-    model: the policy
-    sensor: the the quantizer
-    num_episodes: number of episodes to train the policy
-    gamma: discount factor
-    num_codewords: number of codewords used by the fixed quantizer
-    '''
+def A2C(env, model, sensor, num_episodes: int, gamma: float = 0.99, num_codewords: int = 64)-> nn.Module:
+    """
+    Trains a policy using the Advantage Actor-Critic (A2C) algorithm.
+
+    Args:
+        env (gym.Env): The environment that the agent will interact with.
+        model (nn.Module): The policy model that the agent will use to select actions.
+        sensor (Sensor): Used to preprocess the input data for the agent.
+        num_episodes (int): The number of episodes that the agent will train for.
+        gamma (float, optional): The discount factor used to calculate the returns. Defaults to 0.99.
+        num_codewords (int, optional): The number of codewords used by the fixed quantizer. Defaults to 64.
+
+    Returns:
+        model (nn.Module): The trained policy model.
+    """
     optimizer = torch.optim.Adam(model.parameters(), lr=3e-4)
     
     writer = SummaryWriter('../runs_policy/a2c'+str(num_codewords))

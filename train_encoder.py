@@ -1,3 +1,8 @@
+# This script trains an autoencoder model using the VQ-VAE architecture. It defines the encoder, quantizer, and decoder models, 
+# creates a dataset of tuples (o_t, o_{t+1}), and trains the models using the specified hyperparameters. The trained models 
+# are saved in the 'models' folder. The script also uses TensorBoard to log the training progress and visualize the model 
+# performance. The hyperparameters can be specified using command line arguments.
+
 import sys
 import os 
 import torch

@@ -30,5 +30,4 @@ env.reset()
 img = env.render()
 
 encoded, _ = sensor(env)
-
 print(encoded.shape)

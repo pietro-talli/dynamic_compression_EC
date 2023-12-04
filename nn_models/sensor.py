@@ -1,10 +1,12 @@
+from typing import Any
 import torch
 from nn_models.encoder import Encoder
 from nn_models.quantizer import VectorQuantizerEMA
 import torchvision.transforms as T
 import numpy as np
 import torch.nn as nn
-
+import cv2
+import os
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -72,3 +74,36 @@ class Sensor_not_quantized_level_A(nn.Module):
         input_tensor = torch.reshape(torch.cat((prev_screen, curr_screen)), (1,2,h,w))
         encoded = self.encoder(1-input_tensor.to(device))
         return encoded, curr_screen, 1-input_tensor
+
+class SensorDigital():
+    def __init__(self):
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    def to(smt):
+        pass
+
+    def __call__(self, env, prev_screen = None) -> Any:
+        screen = get_screen(env)
+        screen = screen.numpy()
+        screen = screen.transpose(1,2,0)
+        screen = screen[:,:,0]
+
+        # cast to uint8
+        gray = screen.astype('uint8')
+
+        # threshold the grayscale image
+        thresh = cv2.threshold(gray, 254, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
+
+        # resize the image
+        thresh = cv2.resize(thresh, (27,12))
+
+        cv2.imwrite('temp.png', thresh, [cv2.IMWRITE_PNG_COMPRESSION, 100])
+        compressed = cv2.imread('temp.png', 0)
+
+        compressed = compressed/255.
+        compressed = compressed.astype('float32')
+        compressed = torch.from_numpy(compressed)
+        compressed = compressed.to(self.device)
+
+        return compressed.reshape(1,-1), screen
+        

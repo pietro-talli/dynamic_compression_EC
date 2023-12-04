@@ -246,7 +246,7 @@ def A2C(env, model, sensor, num_episodes: int, gamma: float = 0.99, num_codeword
         model (nn.Module): The trained policy model.
     """
     optimizer = torch.optim.Adam(model.parameters(), lr=3e-4)
-    
+    model.to(device)
     writer = SummaryWriter('../runs_policy/a2c'+str(num_codewords))
 
     for episode in range(num_episodes):

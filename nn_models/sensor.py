@@ -95,7 +95,7 @@ class SensorDigital():
         thresh = cv2.threshold(gray, 254, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
 
         # resize the image
-        thresh = cv2.resize(thresh, (27,12))
+        thresh = cv2.resize(thresh, (40,20))
 
         cv2.imwrite('temp.png', thresh, [cv2.IMWRITE_PNG_COMPRESSION, 100])
         compressed = cv2.imread('temp.png', 0)

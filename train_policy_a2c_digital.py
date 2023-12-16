@@ -62,7 +62,7 @@ latent_dim = features*embedding_dim
 #Create the sensor
 sensor = SensorDigital()
 
-latent_dim = 27*12
+latent_dim = 40*20
 
 #Create the policy
 model = RecA2C(latent_dim, latent_dim, env.action_space.n)

@@ -70,5 +70,5 @@ latent_dim = args.h*args.w
 model = RecA2C(latent_dim, latent_dim, env.action_space.n)
 
 #Train the policy
-model = A2C(env, model, sensor, num_episodes, gamma=0.99, num_codewords=-1)
-torch.save(model.state_dict(), '../models/policy_a2c_digital.pt')
+model = A2C(env, model, sensor, num_episodes, gamma=0.99, num_codewords=-args.h)
+torch.save(model.state_dict(), '../models/policy_a2c_digital_'+str(args.h)+'_'+str(args.w)+'.pt')

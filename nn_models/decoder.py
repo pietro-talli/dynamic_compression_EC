@@ -32,7 +32,7 @@ class ResidualStack(nn.Module):
         return F.relu(x)
  
 class Decoder(nn.Module):
-    def __init__(self, in_channels, num_hiddens, num_residual_layers, num_residual_hiddens):
+    def __init__(self, in_channels, num_hiddens, num_residual_layers, num_residual_hiddens, out_channels=2):
         super(Decoder, self).__init__()
         
         self._conv_1 = nn.Conv2d(in_channels=in_channels,
@@ -51,7 +51,7 @@ class Decoder(nn.Module):
                                                 stride=(10,10), padding=1)
         
         self._conv_trans_2 = nn.ConvTranspose2d(in_channels=num_hiddens//2, 
-                                                out_channels=2,
+                                                out_channels=out_channels,
                                                 kernel_size=(10,11), 
                                                 stride=(8,9), padding=1)
 

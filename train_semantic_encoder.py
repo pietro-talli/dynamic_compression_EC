@@ -29,7 +29,6 @@ num_samples = 50000 #number of tuples to collect
 collect_dataset = False
 if args.num_samples:
     num_samples = args.num_samples
-    collect_dataset = True
 
 num_training_updates = 100
 embedding_dim = 64

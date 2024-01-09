@@ -99,8 +99,8 @@ class SensorDigital():
         # resize the image
         thresh = cv2.resize(thresh, (self.h,self.w))
 
-        cv2.imwrite('temp.png', thresh, [cv2.IMWRITE_PNG_COMPRESSION, 100])
-        compressed = cv2.imread('temp.png', 0)
+        cv2.imwrite('temp_'+str(self.h)+'_'+str(self.w)+'.png', thresh, [cv2.IMWRITE_PNG_COMPRESSION, 100])
+        compressed = cv2.imread('temp_'+str(self.h)+'_'+str(self.w)+'.png', 0)
 
         compressed = compressed/255.
         compressed = compressed.astype('float32')

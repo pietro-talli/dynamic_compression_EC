@@ -28,8 +28,8 @@ parser = argparse.ArgumentParser(description='Train the model')
 parser.add_argument('--num_episodes', type=int, help='number of episode to train the policy', required=False)
 parser.add_argument('--num_codewords', type=int, help='selct the quantizer to quantize the latent space (default is 64)', required=False)
 parser.add_argument('--embedding_dim', type=int, help='selct the latent space size (default is 8)', required=False)
-parser.add_argument('--h', type=int, help='height of the screen', required=False)
-parser.add_argument('--w', type=int, help='width of the screen', required=False)
+parser.add_argument('--h', type=int, help='height of the screen', required=True)
+parser.add_argument('--w', type=int, help='width of the screen', required=True)
 
 args = parser.parse_args()
 

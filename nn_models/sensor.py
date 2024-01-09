@@ -106,6 +106,8 @@ class SensorDigital():
         compressed = compressed.astype('float32')
         compressed = torch.from_numpy(compressed)
         compressed = compressed.to(self.device)
+        # resize the image
+        thresh = cv2.resize(thresh, (self.h,self.w))
 
         return compressed.reshape(1,-1), screen
         

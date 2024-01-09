@@ -76,8 +76,10 @@ class Sensor_not_quantized_level_A(nn.Module):
         return encoded, curr_screen, 1-input_tensor
 
 class SensorDigital():
-    def __init__(self):
+    def __init__(self, h,w):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.h = h
+        self.w = w
 
     def to(smt):
         pass
@@ -95,7 +97,7 @@ class SensorDigital():
         thresh = cv2.threshold(gray, 254, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
 
         # resize the image
-        thresh = cv2.resize(thresh, (40,20))
+        thresh = cv2.resize(thresh, (self.h,self.w))
 
         cv2.imwrite('temp.png', thresh, [cv2.IMWRITE_PNG_COMPRESSION, 100])
         compressed = cv2.imread('temp.png', 0)

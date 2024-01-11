@@ -163,11 +163,11 @@ for i in range(num_training_updates):
             
             torch.save(quantizer.state_dict(), '../models/quantizer_'+str(num_embeddings)+'_training_sem.pt')
             if retrain:
-                torch.save(encoder.state_dict(), '../models/encoder_training_sem.pt')
-                torch.save(decoder.state_dict(), '../models/decoder_training_sem.pt')
+                torch.save(encoder.state_dict(), '../models/encoder_training_'+str(num_embeddings)+'_sem.pt')
+                torch.save(decoder.state_dict(), '../models/decoder_training_'+str(num_embeddings)+'_sem.pt')
 
 
 torch.save(quantizer.state_dict(), '../models/quantizer_'+str(num_embeddings)+'_semantic.pt')
 if retrain:
-    torch.save(encoder.state_dict(), '../models/encoder_semantic.pt')
-    torch.save(decoder.state_dict(), '../models/decoder_semantic.pt')
+    torch.save(encoder.state_dict(), '../models/encoder_'+str(num_embeddings)+'_semantic.pt')
+    torch.save(decoder.state_dict(), '../models/decoder_'+str(num_embeddings)+'_semantic.pt')

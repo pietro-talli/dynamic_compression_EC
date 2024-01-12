@@ -46,7 +46,7 @@ if args.retrain:
 
 num_hiddens = 128
 num_residual_hiddens = 32
-num_residual_layers = 2
+num_residual_layers = 4
 
 #The input shape of the encoder is BCHW in this case (B,2,160,360)
 #The output shape is (B,embedding_dim,2,4)

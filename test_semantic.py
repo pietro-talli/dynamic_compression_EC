@@ -8,7 +8,6 @@ from torch.utils.data import DataLoader
 
 from semantic_utils import load_ImageNet
 
-
 # Create a dataset
 dataset = FramesDataset('../dataset/description.csv', '../dataset/images', ToTensor())
 dataloader = DataLoader(dataset, batch_size=128,
@@ -16,6 +15,7 @@ dataloader = DataLoader(dataset, batch_size=128,
 
 # shape of the observation 
 _, h,w = dataset[0]['curr'].shape
+print(h,w)
 
 # Load the dataset
 #imagenet_path = '/nfsd/signet4/imagenet'
@@ -25,24 +25,33 @@ trainloader, testloader = load_ImageNet([h,w], batch_size=128, path=imagenet_pat
 # Load the models
 num_hiddens = 128
 num_residual_hiddens = 32
-num_residual_layers = 2
+num_residual_layers = 4
 
 embedding_dim = 200
-num_embeddings = 192
+num_embeddings = 1024
 
 encoder = Encoder(3, num_hiddens, num_residual_layers, num_residual_hiddens, embedding_dim)
 quantizer = VectorQuantizerEMA(num_embeddings,embedding_dim)
 decoder = Decoder(embedding_dim, num_hiddens, num_residual_layers, num_residual_hiddens, 3)
 
-encoder.load_state_dict(torch.load('../models/encoder_training_sem.pt', map_location=torch.device('cpu')))
-decoder.load_state_dict(torch.load('../models/decoder_training_sem.pt', map_location=torch.device('cpu')))
-quantizer.load_state_dict(torch.load('../models/quantizer_192_training_sem.pt', map_location=torch.device('cpu')))
+encoder.load_state_dict(torch.load('../models/encoder_training_1024_sem.pt', map_location=torch.device('cpu')))
+decoder.load_state_dict(torch.load('../models/decoder_training_1024_sem.pt', map_location=torch.device('cpu')))
+quantizer.load_state_dict(torch.load('../models/quantizer_1024_training_sem.pt', map_location=torch.device('cpu')))
 
 encoder.eval()
 decoder.eval()
 quantizer.eval()
 
 im_batch, _ = next(iter(testloader))
+
+import PIL.Image as Image
+import numpy as np
+im_for_input = Image.open('../dataset/images/10_0.png')
+im_for_input = torch.tensor(np.array(im_for_input)) / 255.0
+im_for_input = im_for_input.permute(2,0,1)
+
+im_batch = im_for_input.unsqueeze(0)
+im_batch = torch.cat((im_batch, im_batch), dim=0)
 
 # Encode the batch
 z = encoder(im_batch)

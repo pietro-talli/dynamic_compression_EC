@@ -8,9 +8,8 @@ import os
 import torch
 import torch.nn.functional as F
 from torch.utils.tensorboard import SummaryWriter
-from nn_models.encoder import Encoder
 from nn_models.quantizer import VectorQuantizerEMA
-from nn_models.decoder import Decoder
+from nn_models.semantic_models import SemanticEncoder, SemanticDecoder
 from utils.utilities_dataset import create_dataset, ToTensor, FramesDataset
 from torch.utils.data import DataLoader
 import numpy as np
@@ -46,17 +45,17 @@ if args.retrain:
 
 num_hiddens = 128
 num_residual_hiddens = 32
-num_residual_layers = 4
+num_residual_layers = 2
 
 #The input shape of the encoder is BCHW in this case (B,2,160,360)
 #The output shape is (B,embedding_dim,2,4)
-encoder = Encoder(3, num_hiddens, num_residual_layers, num_residual_hiddens, embedding_dim)
+encoder = SemanticEncoder(3, num_hiddens, num_residual_layers, num_residual_hiddens, embedding_dim)
 
 #Receives in input the encoded frames with shape (B,embedding_dim,2,4)
 quantizer = VectorQuantizerEMA(num_embeddings,embedding_dim)
 
 #The input shape is (B,embedding_dim,2,4)
-decoder = Decoder(embedding_dim, num_hiddens, num_residual_layers, num_residual_hiddens, 3)
+decoder = SemanticDecoder(embedding_dim, num_hiddens, num_residual_layers, num_residual_hiddens, 3)
 
 #Create a dataset
 # Collect a dataset of tuples (o_t, o_{t+1})
@@ -108,7 +107,7 @@ dataloader = DataLoader(dataset, batch_size=128,
 
 # shape of the observation 
 _, h,w = dataset[0]['curr'].shape
-
+print(h,w)
 
 from semantic_utils import load_ImageNet
 imagenet_path = '/nfsd/signet4/imagenet'

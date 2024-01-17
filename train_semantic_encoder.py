@@ -111,7 +111,7 @@ print(h,w)
 
 from semantic_utils import load_ImageNet
 imagenet_path = '/nfsd/signet4/imagenet'
-#imagenet_path = '/home/pietro/Projects/multihop-jscc/imagenet/tiny-imagenet-200'
+imagenet_path = '/home/pietro/Projects/multihop-jscc/imagenet/tiny-imagenet-200'
 trainloader, testloader = load_ImageNet([h,w], batch_size=128, path=imagenet_path, num_workers=4)
 
 train_res_recon_error = []
@@ -139,6 +139,7 @@ for i in range(num_training_updates):
         #The output of the encoder is of shape (B,embedding_dim,2,4)
         z_e = encoder(data)
         vq_loss, quantized, perplexity, _ = quantizer(z_e, reset)
+        print(quantized.shape)
         data_recon = decoder(quantized) 
         recon_error = F.mse_loss(data_recon, data)
         loss = recon_error + vq_loss

@@ -35,7 +35,11 @@ class SemanticEncoder(nn.Module):
     def __init__(self, in_channels, num_hiddens, num_residual_layers, num_residual_hiddens, embedding_dim):
         super(SemanticEncoder, self).__init__()
 
-        self._conv_1 = nn.Conv2d(in_channels=in_channels,
+        self._conv_0 = nn.Conv2d(in_channels=in_channels,
+                                 out_channels=num_hiddens//2,
+                                 kernel_size=(4,4),
+                                 stride=(3,3), padding=1)
+        self._conv_1 = nn.Conv2d(in_channels=num_hiddens//2,
                                  out_channels=num_hiddens//2,
                                  kernel_size=(4,4),
                                  stride=(3,3), padding=1)
@@ -57,7 +61,10 @@ class SemanticEncoder(nn.Module):
                                       stride=1)
 
     def forward(self, inputs):
-        x = self._conv_1(inputs)
+        x = self._conv_0(inputs)
+        x = F.relu(x)
+
+        x = self._conv_1(x)
         x = F.relu(x)
         
         x = self._conv_2(x)
@@ -80,21 +87,28 @@ class SemanticDecoder(nn.Module):
                                              num_residual_layers=num_residual_layers,
                                              num_residual_hiddens=num_residual_hiddens)
         
-        self._conv_trans_1 = nn.ConvTranspose2d(in_channels=num_hiddens, 
+        self._conv_trans_0 = nn.ConvTranspose2d(in_channels=num_hiddens,
+                                                out_channels=num_hiddens//2,
+                                                kernel_size=(5,4),
+                                                stride=(3,3), padding=(1,0))
+
+        self._conv_trans_1 = nn.ConvTranspose2d(in_channels=num_hiddens//2, 
                                                 out_channels=num_hiddens//2,
                                                 kernel_size=(4,4), 
-                                                stride=(3,3), padding=(1,0))
+                                                stride=(3,3), padding=(0,0))
         
         self._conv_trans_2 = nn.ConvTranspose2d(in_channels=num_hiddens//2, 
                                                 out_channels=out_channels,
                                                 kernel_size=(4,4), 
-                                                stride=(3,3), padding=(0,2))
+                                                stride=(3,3), padding=(3,2))
 
     def forward(self, inputs):
         x = self._conv_1(inputs)
         
         x = self._residual_stack(x)
         
+        x = self._conv_trans_0(x)
+        x = F.relu(x)
         x = self._conv_trans_1(x)
         x = F.relu(x)
         

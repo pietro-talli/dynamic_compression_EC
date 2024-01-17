@@ -68,7 +68,7 @@ if collect_dataset:
     create_dataset(num_samples, '../dataset')
     print('Dataset collected')
 
-writer = SummaryWriter('../runs')
+writer = SummaryWriter('../runs/6_13_'+str(num_embeddings))
 
 
 # if gpu is to be used
@@ -111,7 +111,7 @@ print(h,w)
 
 from semantic_utils import load_ImageNet
 imagenet_path = '/nfsd/signet4/imagenet'
-imagenet_path = '/home/pietro/Projects/multihop-jscc/imagenet/tiny-imagenet-200'
+#imagenet_path = '/home/pietro/Projects/multihop-jscc/imagenet/tiny-imagenet-200'
 trainloader, testloader = load_ImageNet([h,w], batch_size=128, path=imagenet_path, num_workers=4)
 
 train_res_recon_error = []
@@ -161,13 +161,13 @@ for i in range(num_training_updates):
             writer.add_scalar('Perplexity/batch', np.mean(train_res_perplexity[-100:]), time_step)
             time_step += 1
             
-            torch.save(quantizer.state_dict(), '../models/quantizer_'+str(num_embeddings)+'_training_sem.pt')
+            torch.save(quantizer.state_dict(), '../models/quantizer_'+str(num_embeddings)+'_training_sem_6_13.pt')
             if retrain:
-                torch.save(encoder.state_dict(), '../models/encoder_training_'+str(num_embeddings)+'_sem.pt')
-                torch.save(decoder.state_dict(), '../models/decoder_training_'+str(num_embeddings)+'_sem.pt')
+                torch.save(encoder.state_dict(), '../models/encoder_training_'+str(num_embeddings)+'_sem_6_13.pt')
+                torch.save(decoder.state_dict(), '../models/decoder_training_'+str(num_embeddings)+'_sem_6_13.pt')
 
 
-torch.save(quantizer.state_dict(), '../models/quantizer_'+str(num_embeddings)+'_semantic.pt')
+torch.save(quantizer.state_dict(), '../models/quantizer_'+str(num_embeddings)+'_semantic_6_13.pt')
 if retrain:
-    torch.save(encoder.state_dict(), '../models/encoder_'+str(num_embeddings)+'_semantic.pt')
-    torch.save(decoder.state_dict(), '../models/decoder_'+str(num_embeddings)+'_semantic.pt')
+    torch.save(encoder.state_dict(), '../models/encoder_'+str(num_embeddings)+'_semantic_6_13.pt')
+    torch.save(decoder.state_dict(), '../models/decoder_'+str(num_embeddings)+'_semantic_6_13.pt')

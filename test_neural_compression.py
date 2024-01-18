@@ -14,7 +14,7 @@ x = Image.open("../dataset/images/0_0.png")
 
 transform = torchvision.transforms.Compose([
     torchvision.transforms.PILToTensor(),
-    torchvision.transforms.Resize((64, 128)),
+    torchvision.transforms.Resize((16, 32)),
     torchvision.transforms.ConvertImageDtype(torch.float32),
 ])
 

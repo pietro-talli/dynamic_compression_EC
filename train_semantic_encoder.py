@@ -139,7 +139,6 @@ for i in range(num_training_updates):
         #The output of the encoder is of shape (B,embedding_dim,2,4)
         z_e = encoder(data)
         vq_loss, quantized, perplexity, _ = quantizer(z_e, reset)
-        print(quantized.shape)
         data_recon = decoder(quantized) 
         recon_error = F.mse_loss(data_recon, data)
         loss = recon_error + vq_loss

@@ -238,7 +238,7 @@ def main(argv):
         pin_memory=(device == "cuda"),
     )
 
-    net = image_models[args.model](quality=3)
+    net = image_models[args.model](quality=1)
     net = net.to(device)
 
     if args.cuda and torch.cuda.device_count() > 1:
